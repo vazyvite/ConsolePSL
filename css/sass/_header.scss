@@ -1,0 +1,16 @@
+header {
+	position: relative;
+	z-index: 2;
+	h1 {
+		padding: 7px 35px 10px 35px;
+		margin-top: 0;
+		margin-bottom: 0;
+		box-shadow: 0 0px 10px 1px rgba(0,0,0,.4);
+	}
+}
+main {
+	position: relative;
+	z-index: 1;
+	max-height: 920px;
+	overflow-y: auto;
+}

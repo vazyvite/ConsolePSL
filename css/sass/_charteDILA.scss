@@ -1,0 +1,35 @@
+$circle-radius: 10px;
+
+.dila-circle {
+	display: inline-block;
+	margin-left: 5px;
+	border-radius: 100px;
+	width: $circle-radius;
+	height: $circle-radius;
+	content: "";
+
+	&.indigo {
+		background-color: $color_indigo;
+	}
+	&.orange {
+		background-color: $color_orange;
+	}
+	&.violet {
+		background-color: $color_violet;
+	}
+	&.rose {
+		background-color: $color_rose;
+	}
+	&.bleu1 {
+		background-color: $color_bleu1;
+	}
+	&.emeraude {
+		background-color: $color_emeraude;
+	}
+	&.rouge {
+		background-color: $color_rouge;
+	}
+	&.bleu2 {
+		background-color: $color_bleu2;
+	}
+}

@@ -1,0 +1,23 @@
+th.commandCel,
+td.commandCel {
+	width: 150px;
+}
+
+thead tr {
+	background-color: $color_bleu1;
+	color: $color_blanc;
+}
+
+td details {
+	summary {
+		cursor: pointer;
+	}
+	.container {
+		background-color: $color_gris_blanc;
+		border: 1px solid $color_gris_border;
+		border-radius: 0 0 3px 3px;
+		.form-group {
+			margin-bottom: 0;
+		}
+	}
+}

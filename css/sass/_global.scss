@@ -1,0 +1,21 @@
+* {
+	/*font-family: Roboto;*/
+	font-family: Arial;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	color: $color_bleu1;
+	font-family: Roboto-thin;
+}
+h2 {
+	border-bottom: 1px dashed #4D96D2;
+	margin-bottom: 30px;
+}
+h3 {
+	margin-top: 0;
+}

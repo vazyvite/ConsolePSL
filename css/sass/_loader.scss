@@ -1,0 +1,21 @@
+.loader {
+	position: absolute;
+	z-index: 1000;
+	background-color: rgba(0,0,0,0.5);
+	background-image: url(images/loader.gif);
+	background-repeat: no-repeat;
+	background-position: center center;
+	text-align: right;
+	color: $color_bleu_clair;
+	font-weight: bold;
+	padding-top: 12px;
+	padding-right: 5px;
+	.progressbar {
+		position: absolute;
+		top: 0;
+		left: 0;
+		display: block;
+		height: 100%;
+		background-color: rgba(200,200,200,.3);
+	}
+}

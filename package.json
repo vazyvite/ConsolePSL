@@ -1,0 +1,17 @@
+{
+	"name": "Console PSL",
+	"version": "0.1.0",
+	"description": "Console de déploiement PSL",
+	"author": "Jonathan JACQUES <jonathan.jacques@capgemini.com>",
+	"main": "index.html",
+	"window": {
+		"fullscreen": false,
+		"toolbar": true,
+		"width": 600,
+		"height": 1080,
+		"min-height": 1080,
+		"max-height": 1080,
+		"position": "mouse"
+  },
+  "license": "Copyright Jonathan Jacques"
+}
