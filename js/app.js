@@ -100,7 +100,7 @@
 		}
 	}
 
-	function isStubbed () {
+	function isStubbed() {
 		return ($("#isStubbed").is(":checked")) ? true : false;
 	}
 
@@ -137,14 +137,14 @@
 		return (version.match(/^1\.0/ig)) ? true : false;
 	}
 
-	function buildStubbedService (infosDemarche, $that, callback) {
+	function buildStubbedService(infosDemarche, $that, callback) {
 		var fs = require("fs");
 		fs.readFile(WORKSPACE + "\\bouchons\\psl-teledossier-service-stubbed-ejb\\pom.xml", "utf8", function (err, data) {
 			if (err) {
 				$that.parents("tr:first").data("logs", $that.data("logs") + err + "\n").removeClass("success").addClass("danger");
 				removeLoader($that.parents("tr:first"));
 			} else {
-				var result = data.replace(/<version>([0-9a-zA-Z\.\-]+)<\/version>/i, "<version>" + infosDemarche.versionServices + "<\/version>")
+				var result = data.replace(/<version>([0-9a-zA-Z\.\-]+)<\/version>/i, "<version>" + infosDemarche.versionServices + "<\/version>");
 				fs.writeFile(WORKSPACE + "\\bouchons\\psl-teledossier-service-stubbed-ejb\\pom.xml", result, 'utf8', function (err) {
 					if (err) {
 						$that.parents("tr:first").data("logs", $that.data("logs") + err + "\n").removeClass("success").addClass("danger");
@@ -269,7 +269,7 @@
 				addLoader($that.parents("tr:first"));
 				infosDemarche.code = demarche.dir;
 				getInfosPOM(infosDemarche, $that, function () {
-					avanceLoader($that.parents("tr:first"), pasAvancement * 1);
+					avanceLoader($that.parents("tr:first"), pasAvancement);
 					if (isStubbed()) {
 						buildStubbedService(infosDemarche, $that, function () {
 							avanceLoader($that.parents("tr:first"), pasAvancement * 2);
