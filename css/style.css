@@ -131,11 +131,13 @@ td details .container {
   /* line 13, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_loader.scss */
   .loader .progressbar {
     position: absolute;
-    top: 0;
+    top: 10%;
     left: 0;
     display: block;
-    height: 100%;
-    background-color: rgba(200, 200, 200, 0.3); }
+    height: 80%;
+    background-color: rgba(200, 200, 200, 0.3);
+    box-shadow: inset -100px 0 100px rgba(200, 200, 200, 0.3);
+    border-radius: 0 5px 5px 0; }
 
 /* line 2, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_modal.scss */
 .modal .modal-body {

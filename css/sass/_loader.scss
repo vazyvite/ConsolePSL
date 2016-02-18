@@ -12,10 +12,12 @@
 	padding-right: 5px;
 	.progressbar {
 		position: absolute;
-		top: 0;
+		top: 10%;
 		left: 0;
 		display: block;
-		height: 100%;
+		height: 80%;
 		background-color: rgba(200,200,200,.3);
+		box-shadow: inset -100px 0 100px rgba(200, 200, 200, 0.3);
+		border-radius: 0 5px 5px 0;
 	}
 }
