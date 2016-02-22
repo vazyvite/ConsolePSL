@@ -127,6 +127,22 @@
 			},
 
 			/**
+			 * Modifie la position et la taille du loader.
+			 * @param {object} $cible la cible du loader
+			 */
+			modifyLoader: function ($cible) {
+				if ($cible != null) {
+					var $loader = $("#" + $cible.data("loader"));
+					$loader.css({
+						top: $cible.offset().top,
+						left: $cible.offset().left,
+						width: $cible.outerWidth(),
+						height: $cible.outerHeight()
+					})
+				}
+			},
+
+			/**
 			 * Supprime un loader de l'élément cible
 			 * @param {object} $cible la cible du loader
 			 */
@@ -207,10 +223,10 @@
 			 */
 			getFrameworkPath: function (infosDemarche) {
 				var path = "";
-				if (utils.isSnapshot(infosDemarche.versionServices)) {
-					path = (utils.isBranche(infosDemarche.versionServices)) ? "services-branche\\psl-demarche-framework" : "Framework";
+				if (utils.isSnapshot(infosDemarche.versionFramework)) {
+					path = (utils.isBranche(infosDemarche.versionFramework)) ? "services-branche\\psl-demarche-framework" : "Framework";
 				} else {
-					path = "versions services\\psl-services-" + infosDemarche.versionServices + "\\psl-demarche-framework";
+					path = "versions services\\psl-services-" + infosDemarche.versionFramework + "\\psl-demarche-framework";
 				}
 				return path;
 			},
@@ -553,6 +569,7 @@
 			if (data_demarche != null) {
 				ui.addLoader($that.parents("tr:first"));
 				infosDemarche.code = data_demarche.dir;
+				incrementEtape($that, true);
 				// récupération des informations du POM de la démarche
 				bat.getInfosPOM(infosDemarche, $that, function () {
 					utils.avanceLoader($that);
@@ -594,6 +611,12 @@
 					$that.parents("details").find(".infosDemarche-vFramework").text(infosDemarche.versionFramework);
 				});
 			}
+			setTimeout(function () {
+				$(".loader").each(function () {
+					var $cible = $(this).data("cible");
+					ui.modifyLoader($cible);
+				});
+			}, 10);
 		});
 		$(document).on("resize", function () {
 			$(".loader").each(function () {
