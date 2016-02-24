@@ -23,6 +23,7 @@
 				<span class="dila-circle emeraude"></span>
 				<span class="dila-circle rouge"></span>
 				<span class="dila-circle bleu2"></span>
+				<button id="settings" title="options" class="btn btn-default pull-right" type="button"><span class="glyphicon glyphicon-cog"></span></button>
 			</h1>
 		</header>
 		<main>
@@ -46,7 +47,7 @@
 
 				<h2>Démarches</h2>
 				<div class="row">
-					<div class="col-md-6">
+					<div class="col-md-12">
 						<table id="listeProjets" class="table table-responsive table-bordered table-condensed">
 							<thead>
 								<tr>
@@ -56,13 +57,23 @@
 							</thead>
 							<tbody></tbody>
 						</table>
+						<button id="addDemarche" title="Ajouter une nouvelle démarche" type="button" class="btn btn-primary pull-right">Ajouter Démarche +</button>
 					</div>
-					<div class="col-md-5 col-md-offset-1">
-						<h3>Options</h3>
+				</div>
+
+				<h2>Options</h2>
+				<div class="row">
+					<div class="col-md-12">
 						<div class="checkbox">
 							<label class="control-label" for="isStubbed">
 								<input type="checkbox" id="isStubbed" checked />
 								Bouchonner la sortie XML
+							</label>
+						</div>
+						<div class="checkbox">
+							<label class="control-label" for="isServicesMandatory">
+								<input type="checkbox" id="isServicesMandatory" checked />
+								Toujours déployer les services avec les démarches
 							</label>
 						</div>
 					</div>
@@ -86,9 +97,69 @@
 			</div>
 		</div>
 
+		<div class="modal fade" id="modalAddDemarche" tabindex="-1" role="dialog">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content form-horizontal">
+					<form action="#">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							<h4 class="modal-title">Nouvelle Démarche</h4>
+						</div>
+						<div class="modal-body">
+							<div class="form-group">
+								<label for="nomDemarche" class="col-md-4 control-label">Nom démarche</label>
+								<div class="col-md-8">
+									<input type="text" required class="form-control" id="nomDemarche" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="dirDemarche" class="col-md-4 control-label">Répertoire</label>
+								<div class="col-md-8">
+									<input type="text" required class="form-control" id="dirDemarche" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="codeDemarche" class="col-md-4 control-label">Code démarche</label>
+								<div class="col-md-8">
+									<input type="text" class="form-control" id="codeDemarche" />
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="submit" class="btn btn-primary" id="validAddDemarche">Valider</button>
+							<button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="modalSettings" tabindex="-1" role="dialog">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content form-horizontal">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<h4 class="modal-title">Settings</h4>
+					</div>
+					<div class="modal-body">
+						<div class="form-group">
+							<label for="nomDemarche" class="col-md-4 control-label">Workspace</label>
+							<div class="col-md-8">
+								<input type="text" required class="form-control" id="settingsWorkspace" />
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-primary" id="validSettings">Valider</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<script type="text/javascript" src="js/libs/jquery-2.1.4.min.js"></script>
 		<script type="text/javascript" src="js/libs/bootstrap.min.js"></script>
-		<script type="text/javascript" src="js/data.js"></script>
+		<!--<script type="text/javascript" src="js/data.js"></script>-->
 		<script type="text/javascript" src="js/app.js"></script>
     </body>
 </html>

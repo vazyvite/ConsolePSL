@@ -1,0 +1,47 @@
+{
+	"data": {
+		"listeDemarches": [{
+			"name": "ILE",
+			"code": "ILE",
+			"dir": "ILE",
+			"hasAction": false,
+			"listeActions": []
+		},{
+			"name": "RCO",
+			"code": "recensementCitoyen",
+			"dir": "RCO",
+			"hasAction": false,
+			"listeActions": []
+		},{
+			"name": "IRF",
+			"code": "INSRegistreFR",
+			"dir": "IRF",
+			"hasAction": true,
+			"listeActions": ["INSCRIPTION", "MODIFICATION", "RENOUVELLEMENT", "RESILIATION"]
+		},{
+			"name": "DICPE",
+			"code": "DICPE",
+			"dir": "DICPE",
+			"hasAction": false,
+			"listeActions": []
+		},{
+			"name": "eCreation",
+			"code": "CR",
+			"dir": "ECREA",
+			"hasAction": false,
+			"listeActions": []
+		},{
+			"name": "eModification",
+			"code": "MD",
+			"dir": "EMODIF",
+			"hasAction": false,
+			"listeActions": []
+		},{
+			"name": "eSubvention",
+			"code": "eSubvention",
+			"dir": "ESUB",
+			"hasAction": false,
+			"listeActions": ["RECHERCHE"]
+		}]
+	}
+}
