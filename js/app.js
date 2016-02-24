@@ -4,6 +4,8 @@
 (function ($) {
 	'use strict';
 
+	window.app = {};
+
 	/**
 	 * Objet informations de Démarche.
 	 */
@@ -30,7 +32,7 @@
 	}
 
 	var DIR_BATCH = "./bat",
-		WORKSPACE = "D:\\projetsDILA\\src",
+		CORE_DIR = null,
 		deployInfos = {
 			services: "",
 			demarches: []
@@ -41,42 +43,46 @@
 			 */
 			creerTableDemarches: function () {
 				var $table = $("#listeProjets tbody"),
-					$ligne = null,
-					$cel2 = null,
-					i = 0,
-					idDemarche = null,
-					demarche = null,
-					$cel1 = null,
-					$contentInfosDemarche = null,
-					$infosDemarche = null;
+					i = 0;
 				$table.children().remove();
-				for (i; i < app.data.listeDemarches.length; i++) {
-					demarche = app.data.listeDemarches[i];
-					idDemarche = "lblDemarche_" + demarche.name;
-					$ligne = $("<tr>");
-
-					$cel1 = $("<td>").attr("id", "lblDemarche_" + demarche.name);
-					$infosDemarche = $("<details>").appendTo($cel1);
-					$("<summary>").text(demarche.name).appendTo($infosDemarche);
-					$contentInfosDemarche = $("<div>").addClass("container").appendTo($infosDemarche);
-					ui.createFormGroupStatic("version services : ", "", demarche.name, "infosDemarche-vServices").appendTo($contentInfosDemarche);
-					ui.createFormGroupStatic("version framework : ", "", demarche.name, "infosDemarche-vFramework").appendTo($contentInfosDemarche);
-					$cel1.appendTo($ligne);
-
-					$cel2 = $("<td>");
-					$("<button>").attr({
-						title: "builder et déployer la démarche " + demarche.name,
-						id: "build" + demarche.code,
-						'aria-describedby': idDemarche
-					}).addClass("btn btn-default build glyphicon glyphicon-send").data({demarche: demarche}).appendTo($cel2);
-					$("<button>").attr({
-						title: "voir les logs de la démarche " + demarche.name,
-						id: "logs" + demarche.code,
-						'aria-describedby': idDemarche
-					}).addClass("btn btn-default showLogs glyphicon glyphicon-modal-window").data({demarche: demarche}).appendTo($cel2);
-					$cel2.appendTo($ligne);
-					$ligne.appendTo($table);
+				if (!app.data.hasOwnProperty("listeDemarches")) {
+					app.data.listeDemarches = [];
 				}
+				for (i; i < app.data.listeDemarches.length; i++) {
+					ui.creerTableLineDemarche(app.data.listeDemarches[i], $table);
+				}
+			},
+
+			/**
+			 * Création d'une ligne de démarche dans la table
+			 * @param {object} demarche un objet Demarche
+			 * @param {object} $table   la table
+			 */
+			creerTableLineDemarche: function (demarche, $table) {
+				var idDemarche = "lblDemarche_" + demarche.name,
+					$ligne = $("<tr>"),
+					$cel1 = $("<td>").attr("id", "lblDemarche_" + demarche.name),
+					$infosDemarche = $("<details>").appendTo($cel1),
+					$cel2 = $("<td>"),
+					$contentInfosDemarche = null;
+				$("<summary>").text(demarche.name).appendTo($infosDemarche);
+				$contentInfosDemarche = $("<div>").addClass("container").appendTo($infosDemarche);
+				ui.createFormGroupStatic("version services : ", "", demarche.name, "infosDemarche-vServices").appendTo($contentInfosDemarche);
+				ui.createFormGroupStatic("version framework : ", "", demarche.name, "infosDemarche-vFramework").appendTo($contentInfosDemarche);
+				$cel1.appendTo($ligne);
+
+				$("<button>").attr({
+					title: "builder et déployer la démarche " + demarche.name,
+					id: "build" + demarche.code,
+					'aria-describedby': idDemarche
+				}).addClass("btn btn-default build glyphicon glyphicon-send").data({demarche: demarche}).appendTo($cel2);
+				$("<button>").attr({
+					title: "voir les logs de la démarche " + demarche.name,
+					id: "logs" + demarche.code,
+					'aria-describedby': idDemarche
+				}).addClass("btn btn-default showLogs glyphicon glyphicon-modal-window").data({demarche: demarche}).appendTo($cel2);
+				$cel2.appendTo($ligne);
+				$ligne.appendTo($table);
 			},
 
 			/**
@@ -156,11 +162,19 @@
 		},
 		utils = {
 			/**
-			 * Indique si l'option "Générer le service Stubbed" a été activé
+			 * Indique si l'option "Générer le service Stubbed" a été activée
 			 * @returns {boolean}
 			 */
 			isStubbed: function () {
 				return ($("#isStubbed").is(":checked")) ? true : false;
+			},
+
+			/**
+			 * Indique si l'option "Déploiement des services obligatoire" a été activée
+			 * @returns {boolean}
+			 */
+			isServicesMandatory: function () {
+				return ($("#isServicesMandatory").is(":checked")) ? true : false;
 			},
 
 			/**
@@ -345,12 +359,12 @@
 			 */
 			modifyStubbedPom: function (infosDemarche, $that, path, callback) {
 				var fs = require("fs");
-				fs.readFile(WORKSPACE + "\\" + path + "\\pom.xml", "utf8", function (err, data) {
+				fs.readFile(app.settings.workspace + "\\" + path + "\\pom.xml", "utf8", function (err, data) {
 					if (err) {
 						utils.createErreur($that, err);
 					} else {
 						var result = data.replace(/<version>([0-9a-zA-Z\.\-]+)<\/version>/i, "<version>" + infosDemarche.versionServices + "<\/version>");
-						fs.writeFile(WORKSPACE + "\\" + path + "\\pom.xml", result, 'utf8', function (err) {
+						fs.writeFile(app.settings.workspace + "\\" + path + "\\pom.xml", result, 'utf8', function (err) {
 							if (err) {
 								utils.createErreur($that, err);
 							} else if ($.isFunction(callback)) {
@@ -396,7 +410,7 @@
 			 */
 			getInfosPOM: function (infosDemarche, $that, callback) {
 				var fs = require("fs");
-				fs.readFile(WORKSPACE + '\\' + infosDemarche.code + '\\pom.xml', 'utf8', function (err, data) {
+				fs.readFile(app.settings.workspace + '\\' + infosDemarche.code + '\\pom.xml', 'utf8', function (err, data) {
 					var patternVersionServices = /<version\.services\-PSL>([a-zA-Z0-9\.\-]*)<\/version\.services\-PSL>/ig,
 						patternVersionFramework = /<version\.framework\-PSL>([a-zA-Z0-9\.\-]*)<\/version\.framework\-PSL>/ig,
 						matchVersionServices = 0,
@@ -413,8 +427,78 @@
 						}
 					}
 				});
+			},
+
+			/**
+			 * Sauvegarde des infos démarches dans le data.json
+			 * @callback callback
+			 */
+			sauverDemarches: function (callback) {
+				localStorage.setItem("data", JSON.stringify(app.data));
+			},
+
+			/**
+			 * Sauvegarde des infos démarches dans le data.json
+			 * @callback callback
+			 */
+			sauverSettings: function (callback) {
+				localStorage.setItem("workspace", JSON.stringify(app.settings));
+			},
+
+			/**
+			 * Charge les infos démarches depuis le data.json
+			 * @callback callback
+			 */
+			getDataDemarches: function (callback) {
+				var json = JSON.parse(localStorage.getItem("data"));
+				if (!json) {
+					json = {
+						"listeDemarches": []
+					};
+				}
+				if ($.isFunction(callback)) {
+					callback(json);
+				}
+			},
+
+			/**
+			 * Charge les infos démarches depuis le data.json
+			 * @callback callback
+			 */
+			getSettings: function (callback) {
+				var json = JSON.parse(localStorage.getItem("workspace"));
+				if (!json) {
+					json = {
+						"workspace": "D:\\projetsDILA\\src"
+					};
+				}
+				if ($.isFunction(callback)) {
+					callback(json);
+				}
 			}
 		};
+
+	function valideChamp($champ) {
+		var isValide = true;
+		if ($champ != null) {
+			if ($champ.is(":required") && $champ.val() == null || $champ.val().trim() == "") {
+				isValide = false;
+			}
+		}
+		return isValide;
+	}
+
+	function addErreur($champ) {
+		if ($champ != null) {
+			$champ.attr("aria-invalid", true);
+		}
+	}
+
+	function removeErreur($champ) {
+		if ($champ != null) {
+			$champ.attr("aria-invalid", false);
+		}
+	}
 
 	/**
 	 * Scénario de traitement du services stubbé
@@ -425,7 +509,7 @@
 	 * @callback callback
 	 */
 	function stubbedService(infosDemarche, $that, callback) {
-		if (utils.isStubbed() && infosDemarche.versionServices != deployInfos.services) {
+		if (utils.isServicesMandatory() && utils.isStubbed() && infosDemarche.versionServices != deployInfos.services) {
 			var path = "bouchons\\psl-teledossier-service-stubbed-ejb";
 			bat.modifyStubbedPom(infosDemarche, $that, path, function () {
 				utils.avanceLoader($that);
@@ -456,7 +540,7 @@
 	 * @callback callback
 	 */
 	function services(infosDemarche, $that, callback) {
-		if (infosDemarche.versionServices != deployInfos.services) {
+		if (utils.isServicesMandatory() && infosDemarche.versionServices != deployInfos.services) {
 			var path = utils.getServicesPath(infosDemarche);
 			// mvn clean
 			bat.clean($that, path, function () {
@@ -517,6 +601,98 @@
 		});
 	}
 
+	function getCoreDirectory(callback) {
+		require('child_process').exec('cmd /c getDirSettingsName.bat', {
+			cwd: DIR_BATCH
+		}, function (err, stdout, stderr) {
+			if (err) {
+				alert("Une erreur s'est produite lors de la récupération du répertoire de l'application " + err);
+			} else if ($.isFunction(callback)) {
+				CORE_DIR = stdout.replace(/"|\n/g, "");
+				callback();
+			}
+		});
+	}
+
+	/**
+	 * @deprecated
+	 */
+	function createFile(file, callback) {
+		var path = require("path");
+		require("fs").writeFile(path.join(CORE_DIR, file), JSON.stringify("{}"), function (err) {
+			if (err) {
+				throw err;
+			} else if ($.isFunction(callback)) {
+				callback();
+			}
+		});
+	}
+
+	/**
+	 * @deprecated
+	 */
+	function createSettingFile(file, callback) {
+		var fs = require("fs"),
+			path = require("path");
+		fs.access(path.normalize(CORE_DIR), fs.F_OK, function (err) {
+			if (err) {
+				// le chemin n'existe pas
+				fs.mkdir(path.normalize(CORE_DIR), function (err) {
+					if (err) {
+						// une erreur s'est produite
+					} else {
+						// le chemin a été créé
+						createFile(file, callback);
+					}
+				});
+			} else {
+				// le chemin existe
+				createFile(file, callback);
+			}
+		});
+	}
+
+	/**
+	 * @deprecated
+	 */
+	function readSettingsFile( callback) {
+		var path = require("path");
+		require("fs").readFile(path.join(CORE_DIR, "settings.json"), "utf8", function (err, data) {
+			if (err) {
+				createSettingFile("settings.json", function () {
+					if ($.isFunction(callback)) {
+						callback();
+					}
+				});
+			} else if ($.isFunction(callback)) {
+				callback();
+			}
+		});
+	}
+
+	/**
+	 * Initialisation de l'application
+	 */
+	function start() {
+		// récupération des settings
+		getCoreDirectory(function () {
+			var fs = require("fs");
+			bat.getSettings(function (json) {
+				if (json != null) {
+					app.settings = json;
+					app.settings.workspace = json.workspace;
+					// récupération des informations des démarches
+					bat.getDataDemarches(function (json) {
+						if (json != null) {
+							app.data = json;
+							ui.creerTableDemarches();
+						}
+					});
+				}
+			});
+		});
+	}
+
 	/**
 	 * Scénario de déploiement de la démarche
 	 * - mvn clean
@@ -558,9 +734,8 @@
 
 	$(function () {
 		// initialisation de la page
-		if (app != null && app.data != null && app.data.listeDemarches != null && app.data.listeDemarches.length) {
-			ui.creerTableDemarches();
-		}
+		start();
+
 		// mise en place des évènements
 		$("body").on("click", "#listeProjets .build", function () {
 			var $that = $(this),
@@ -591,7 +766,7 @@
 		}).on("click", "#listeProjets .showLogs", function () {
 			var $that = $(this),
 				logs = $that.parents("tr:first").data("logs");
-			$("#modalLogs").data("cible", $that.parents("tr:first")).modal("show").find(".modal-body").html(logs);
+			$("#Logs").data("cible", $that.parents("tr:first")).modal("show").find(".modal-body").html(logs);
 		}).on("click", "#cleanLogs", function () {
 			var $ligneDemarche = $("#modalLogs").data("cible");
 			if ($ligneDemarche != null) {
@@ -626,6 +801,76 @@
 					ui.addLoader($cible);
 				}
 			});
+		});
+		$("#addDemarche").on('click', function () {
+			$("#modalAddDemarche :input").val("");
+			$("#modalAddDemarche").modal("show");
+		});
+
+		$("#validAddDemarche").on("click", function (event) {
+			var isValidForm = true;
+			$("#modalAddDemarche input").each(function () {
+				var $this = $(this),
+					isValidChamp = valideChamp($this);
+				if (!isValidChamp) {
+					addErreur($this);
+					if (isValidForm) {
+						isValidForm = isValidChamp;
+					}
+				} else {
+					removeErreur($this);
+				}
+			});
+			if (isValidForm) {
+				var nvlleDemarche = {
+					"name": $("#nomDemarche").val(),
+					"code": $("#codeDemarche").val(),
+					"dir": $("#dirDemarche").val(),
+					"hasAction": false,
+					"listeActions": []
+				};
+				if (!app.data.hasOwnProperty("listeDemarches")) {
+					app.data.listeDemarches = [];
+				}
+				app.data.listeDemarches.push(nvlleDemarche);
+				ui.creerTableLineDemarche(nvlleDemarche, $("#listeProjets tbody"));
+				bat.sauverDemarches();
+				$("#modalAddDemarche").modal("hide");
+			}
+		});
+
+		$("#settings").on("click", function () {
+			$("#settingsWorkspace").val(app.settings.workspace);
+			$("#modalSettings").modal("show");
+		});
+		$("#validSettings").on("click", function () {
+			var isValidForm = true;
+			$("#modalSettings input").each(function () {
+				var $this = $(this),
+					isValidChamp = valideChamp($this);
+				if (!isValidChamp) {
+					addErreur($this);
+					if (isValidForm) {
+						isValidForm = isValidChamp;
+					}
+				} else {
+					removeErreur($this);
+				}
+			});
+			if (isValidForm) {
+				app.settings.workspace = $("#settingsWorkspace").val();
+				bat.sauverSettings();
+				$("#modalSettings").modal("hide");
+			}
+		});
+		$(".form-control").on("change", function () {
+			var $this = $(this),
+				isValide = valideChamp($this);
+			if (!isValide) {
+				addErreur($this);
+			} else {
+				removeErreur($this);
+			}
 		});
 	});
 }(jQuery));
