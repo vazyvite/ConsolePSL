@@ -5,3 +5,4 @@
 - Ajouter un chargement des éléments déployés sur le serveur à l'initialisation de l'application
 - Ajouter un message d'erreur si le Framework SNAPSHOT n'est pas de la version attendue
 - Ajouter un message d'erreur si les services SNAPSHOT ne sont pas de la version attendue
+- indiquer l'heure de dernier déploiement
