@@ -144,7 +144,7 @@
 						left: $cible.offset().left,
 						width: $cible.outerWidth(),
 						height: $cible.outerHeight()
-					})
+					});
 				}
 			},
 
@@ -476,29 +476,43 @@
 					callback(json);
 				}
 			}
-		};
+		},
+		form = {
+			/**
+			 * Valide un champ
+			 * @param   {object}  $champ le champ à valider
+			 * @returns {boolean} indique si le champ est valide
+			 */
+			valideChamp: function ($champ) {
+				var isValide = true;
+				if ($champ != null) {
+					if ($champ.is(":required") && ($champ.val() == null || $champ.val().trim() == "")) {
+						isValide = false;
+					}
+				}
+				return isValide;
+			},
 
-	function valideChamp($champ) {
-		var isValide = true;
-		if ($champ != null) {
-			if ($champ.is(":required") && $champ.val() == null || $champ.val().trim() == "") {
-				isValide = false;
+			/**
+			 * Créé une erreur sur un champ
+			 * @param {object} $champ le champ à marquer en erreur
+			 */
+			addErreur: function ($champ) {
+				if ($champ != null) {
+					$champ.attr("aria-invalid", true);
+				}
+			},
+
+			/**
+			 * Supprimer une erreur sur un champ
+			 * @param {object} $champ le champ à marquer en correct
+			 */
+			removeErreur: function ($champ) {
+				if ($champ != null) {
+					$champ.attr("aria-invalid", false);
+				}
 			}
-		}
-		return isValide;
-	}
-
-	function addErreur($champ) {
-		if ($champ != null) {
-			$champ.attr("aria-invalid", true);
-		}
-	}
-
-	function removeErreur($champ) {
-		if ($champ != null) {
-			$champ.attr("aria-invalid", false);
-		}
-	}
+		};
 
 	/**
 	 * Scénario de traitement du services stubbé
@@ -601,6 +615,11 @@
 		});
 	}
 
+	/**
+	 * Récupère le répertoire du projet
+	 * @deprecated
+	 * @callback callback
+	 */
 	function getCoreDirectory(callback) {
 		require('child_process').exec('cmd /c getDirSettingsName.bat', {
 			cwd: DIR_BATCH
@@ -609,62 +628,6 @@
 				alert("Une erreur s'est produite lors de la récupération du répertoire de l'application " + err);
 			} else if ($.isFunction(callback)) {
 				CORE_DIR = stdout.replace(/"|\n/g, "");
-				callback();
-			}
-		});
-	}
-
-	/**
-	 * @deprecated
-	 */
-	function createFile(file, callback) {
-		var path = require("path");
-		require("fs").writeFile(path.join(CORE_DIR, file), JSON.stringify("{}"), function (err) {
-			if (err) {
-				throw err;
-			} else if ($.isFunction(callback)) {
-				callback();
-			}
-		});
-	}
-
-	/**
-	 * @deprecated
-	 */
-	function createSettingFile(file, callback) {
-		var fs = require("fs"),
-			path = require("path");
-		fs.access(path.normalize(CORE_DIR), fs.F_OK, function (err) {
-			if (err) {
-				// le chemin n'existe pas
-				fs.mkdir(path.normalize(CORE_DIR), function (err) {
-					if (err) {
-						// une erreur s'est produite
-					} else {
-						// le chemin a été créé
-						createFile(file, callback);
-					}
-				});
-			} else {
-				// le chemin existe
-				createFile(file, callback);
-			}
-		});
-	}
-
-	/**
-	 * @deprecated
-	 */
-	function readSettingsFile( callback) {
-		var path = require("path");
-		require("fs").readFile(path.join(CORE_DIR, "settings.json"), "utf8", function (err, data) {
-			if (err) {
-				createSettingFile("settings.json", function () {
-					if ($.isFunction(callback)) {
-						callback();
-					}
-				});
-			} else if ($.isFunction(callback)) {
 				callback();
 			}
 		});
@@ -808,21 +771,22 @@
 		});
 
 		$("#validAddDemarche").on("click", function (event) {
-			var isValidForm = true;
+			var isValidForm = true,
+				nvlleDemarche = null;
 			$("#modalAddDemarche input").each(function () {
 				var $this = $(this),
-					isValidChamp = valideChamp($this);
+					isValidChamp = form.valideChamp($this);
 				if (!isValidChamp) {
-					addErreur($this);
+					form.addErreur($this);
 					if (isValidForm) {
 						isValidForm = isValidChamp;
 					}
 				} else {
-					removeErreur($this);
+					form.removeErreur($this);
 				}
 			});
 			if (isValidForm) {
-				var nvlleDemarche = {
+				nvlleDemarche = {
 					"name": $("#nomDemarche").val(),
 					"code": $("#codeDemarche").val(),
 					"dir": $("#dirDemarche").val(),
@@ -847,14 +811,14 @@
 			var isValidForm = true;
 			$("#modalSettings input").each(function () {
 				var $this = $(this),
-					isValidChamp = valideChamp($this);
+					isValidChamp = form.valideChamp($this);
 				if (!isValidChamp) {
-					addErreur($this);
+					form.addErreur($this);
 					if (isValidForm) {
 						isValidForm = isValidChamp;
 					}
 				} else {
-					removeErreur($this);
+					form.removeErreur($this);
 				}
 			});
 			if (isValidForm) {
@@ -865,11 +829,11 @@
 		});
 		$(".form-control").on("change", function () {
 			var $this = $(this),
-				isValide = valideChamp($this);
+				isValide = form.valideChamp($this);
 			if (!isValide) {
-				addErreur($this);
+				form.addErreur($this);
 			} else {
-				removeErreur($this);
+				form.removeErreur($this);
 			}
 		});
 	});
