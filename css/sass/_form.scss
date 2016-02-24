@@ -1,0 +1,11 @@
+.form-control {
+	&:focused {
+		box-shadow: 0 0 5px rgb(229, 151, 0);
+	}
+	&[aria-invalid='true'] {
+		box-shadow: 0 0 5px orangered;
+		&:focused {
+			box-shadow: 0 0 5px firebrick;
+		}
+	}
+}

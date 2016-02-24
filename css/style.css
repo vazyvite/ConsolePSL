@@ -143,4 +143,15 @@ td details .container {
 .modal .modal-body {
   max-height: 500px; }
 
+/* line 2, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_form.scss */
+.form-control:focused {
+  box-shadow: 0 0 5px #e59700; }
+
+/* line 5, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_form.scss */
+.form-control[aria-invalid='true'] {
+  box-shadow: 0 0 5px orangered; }
+  /* line 7, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_form.scss */
+  .form-control[aria-invalid='true']:focused {
+    box-shadow: 0 0 5px firebrick; }
+
 /*# sourceMappingURL=style.css.map */
