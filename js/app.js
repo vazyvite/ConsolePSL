@@ -211,8 +211,7 @@
 			 * @param {string} logs  les logs à ajouter
 			 */
 			createLog: function ($that, logs) {
-				var $element = $that.parents("tr:first");
-				$element.data("logs", $that.data("logs") + "\n" + logs);
+				$that.parents("tr:first").data("logs", $that.data("logs") + "\n" + logs);
 			},
 
 			/**
@@ -728,8 +727,10 @@
 			}
 		}).on("click", "#listeProjets .showLogs", function () {
 			var $that = $(this),
-				logs = $that.parents("tr:first").data("logs");
-			$("#Logs").data("cible", $that.parents("tr:first")).modal("show").find(".modal-body").html(logs);
+				logs = $that.parents("tr:first").data("logs") || "";
+			$("#modalLogs").data("cible", $that.parents("tr:first")).modal("show");
+			$("#modalLogs").find(".modal-body").html(logs);
+			$("#modalLogs").modal("show");
 		}).on("click", "#cleanLogs", function () {
 			var $ligneDemarche = $("#modalLogs").data("cible");
 			if ($ligneDemarche != null) {
