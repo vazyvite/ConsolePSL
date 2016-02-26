@@ -8,12 +8,27 @@
 
 	/**
 	 * Objet informations de Démarche.
+	 * Contient les informations de déploiement de la démarche
 	 */
 	function DemarcheInfos() {
 		var that = this;
 		that.code = "";
 		that.versionServices = "";
 		that.versionFramework = "";
+	}
+
+	/**
+	 * Objet ActionDemarche
+	 * Contient les actions secondaires associées à la démarche
+	 * @param {string} name        le nom de l'action
+	 * @param {string} className   la classe associée à l'action
+	 * @param {string} description la description de l'action
+	 */
+	function ActionDemarche(name, className, description) {
+		var that = this;
+		that.name = name || "";
+		that.className = className || "";
+		that.description = description || "";
 	}
 
 	/**
@@ -53,6 +68,50 @@
 				}
 			},
 
+			createDropdownActions: function (action) {
+				var $li = $("<li>");
+				$("<a>").attr({
+					href: "#",
+					title: action.description
+				}).text(action.name).addClass(action.className).appendTo($li);
+				return $li;
+			},
+
+			creerActionsDropDown: function (idDemarche, demarche) {
+				var $btnGroup = $("<div>").addClass("btn-group"),
+					btnCaret = null,
+					listeActions = null,
+					i = 0,
+					listeActionDD = [
+						new ActionDemarche("Déploy complet", "deployFull", "Déploiement complet (démarche + services)"),
+						new ActionDemarche("Déploy simple", "deploySimple", "Déploiement de la démarche sans les services et sans build"),
+						new ActionDemarche("Build", "buildSimple", "Build de la démarche (sans déploiement)")
+					],
+					btnPrincipal = $("<button>").attr({
+						title: "builder et déployer la démarche " + demarche.name,
+						id: "build" + demarche.code,
+						'aria-describedby': idDemarche,
+						type: "button"
+					}).addClass("btn btn-default build").data({demarche: demarche}).appendTo($btnGroup);
+				// glyphicon du bouton principal
+				$("<span>").addClass("glyphicon glyphicon-send").appendTo(btnPrincipal);
+				// le bouton Caret
+				btnCaret = $("<button>").attr({
+					type: "button",
+					'data-toggle': "dropdown",
+					"aria-haspopup": "true",
+					"aria-expanded": "false"
+				}).addClass("btn btn-default dropdown-toggle").appendTo($btnGroup);
+				// l'icone caret
+				$("<span>").addClass("caret").appendTo(btnCaret);
+				// la liste d'actions
+				listeActions = $("<ul>").addClass("dropdown-menu dropdown-menu-right").appendTo($btnGroup);
+				for (i; i < listeActionDD.length; i++) {
+					ui.createDropdownActions(listeActionDD[i]).appendTo(listeActions);
+				}
+				return $btnGroup;
+			},
+
 			/**
 			 * Création d'une ligne de démarche dans la table
 			 * @param {object} demarche un objet Demarche
@@ -64,18 +123,17 @@
 					$cel1 = $("<td>").attr("id", "lblDemarche_" + demarche.name),
 					$infosDemarche = $("<details>").appendTo($cel1),
 					$cel2 = $("<td>"),
-					$contentInfosDemarche = null;
+					$contentInfosDemarche = null,
+					btnGroup = null,
+					btnCaret = null,
+					btnListe = null,
+					elementListe = null;
 				$("<summary>").text(demarche.name).appendTo($infosDemarche);
 				$contentInfosDemarche = $("<div>").addClass("container").appendTo($infosDemarche);
 				ui.createFormGroupStatic("version services : ", "", demarche.name, "infosDemarche-vServices").appendTo($contentInfosDemarche);
 				ui.createFormGroupStatic("version framework : ", "", demarche.name, "infosDemarche-vFramework").appendTo($contentInfosDemarche);
 				$cel1.appendTo($ligne);
-
-				$("<button>").attr({
-					title: "builder et déployer la démarche " + demarche.name,
-					id: "build" + demarche.code,
-					'aria-describedby': idDemarche
-				}).addClass("btn btn-default build glyphicon glyphicon-send").data({demarche: demarche}).appendTo($cel2);
+				ui.creerActionsDropDown(idDemarche, demarche).appendTo($cel2);
 				$("<button>").attr({
 					title: "voir les logs de la démarche " + demarche.name,
 					id: "logs" + demarche.code,
@@ -128,6 +186,7 @@
 						}).data({
 							cible: $cible
 						}).appendTo("body");
+					$("<span>").addClass("loader-etape").text("").appendTo($loader);
 					$cible.data("loader", id);
 				}
 			},
@@ -246,20 +305,27 @@
 
 			/**
 			 * Avance la barre de chargement.
-			 * @param {object} $cible l'objet correspondant à la ligne pour laquelle le loader doit être avancé
+			 * @param {object}  $cible    l'objet correspondant à la ligne pour laquelle le loader doit être avancé
+			 * @param {string}  scenario  le nom du scéario
+			 * @param {string}  step      le nom de l'étape
+			 * @param {number}  nbEtapes	le nombre d'étapes dans le scénario
+			 * @param {boolean} increment	si on doit incrémenter le loader
 			 */
-			avanceLoader: function ($cible) {
+			avanceLoader: function ($cible, scenario, step, nbEtapes, increment) {
 				if ($cible != null) {
-					incrementEtape($cible, false);
+					if (increment) {
+						incrementEtape($cible, false);
+					}
 					var $parent = $cible.parents("tr:first"),
 						etape = $cible.data("etape"),
 						loader = $("#" + $parent.data("loader")),
 						progressbar = loader.find(".progressbar"),
-						pasAvancement = 100 / 18;
+						pasAvancement = 100 / nbEtapes;
 					if (!progressbar.size()) {
 						$("<div>").addClass("progressbar").appendTo(loader);
 						progressbar = loader.find(".progressbar");
 					}
+					loader.find(".loader-etape").text(scenario + "-" + step);
 					progressbar.css("width", (pasAvancement * etape) + "%");
 				}
 			}
@@ -518,18 +584,20 @@
 	 * - mvn clean
 	 * - mvn install
 	 * @param {object}   infosDemarche informations sur la démarche à déployer
-	 * @param {object}   $that         objet source
+	 * @param {object} $that         objet source
+	 * @param {boolean} isForced      indique si la génération des services stubbés est forcée
+	 * @param {number} nbEtapes      le nombre d'étapes
 	 * @callback callback
 	 */
-	function stubbedService(infosDemarche, $that, callback) {
-		if (utils.isServicesMandatory() && utils.isStubbed() && infosDemarche.versionServices != deployInfos.services) {
+	function stubbedService(infosDemarche, $that, isForced, nbEtapes, callback) {
+		if (isForced || (utils.isServicesMandatory() && utils.isStubbed() && infosDemarche.versionServices != deployInfos.services)) {
 			var path = "bouchons\\psl-teledossier-service-stubbed-ejb";
+			utils.avanceLoader($that, "stub", "create", nbEtapes, true);
 			bat.modifyStubbedPom(infosDemarche, $that, path, function () {
-				utils.avanceLoader($that);
+				utils.avanceLoader($that, "stub", "clean", nbEtapes, true);
 				bat.clean($that, path, function () {
-					utils.avanceLoader($that);
 					bat.install($that, path, function () {
-						utils.avanceLoader($that);
+						utils.avanceLoader($that, "stub", "install", nbEtapes);
 						if ($.isFunction(callback)) {
 							callback();
 						}
@@ -549,35 +617,37 @@
 	 * - mvn wildfly:undeploy
 	 * - mvn wildfly:deploy
 	 * @param {object}   infosDemarche les informations de la démarche à déployer
-	 * @param {object}   $that         l'objet source
+	 * @param {object} $that         l'objet source
+	 * @param {boolean} isForced      indique si la génération des services est forcée
+	 * @param {number} nbEtapes      le nombre d'étapes
 	 * @callback callback
 	 */
-	function services(infosDemarche, $that, callback) {
-		if (utils.isServicesMandatory() && infosDemarche.versionServices != deployInfos.services) {
+	function services(infosDemarche, $that, isForced, nbEtapes, callback) {
+		if (isForced || (utils.isServicesMandatory() && infosDemarche.versionServices != deployInfos.services)) {
 			var path = utils.getServicesPath(infosDemarche);
 			// mvn clean
+			utils.avanceLoader($that, "services", "clean", nbEtapes, true);
 			bat.clean($that, path, function () {
-				utils.avanceLoader($that);
+				utils.avanceLoader($that, "services", "install", nbEtapes, true);
 				// mvn install
 				bat.install($that, path, function () {
-					utils.avanceLoader($that);
+					utils.avanceLoader($that, "stub", "copy", nbEtapes, true);
 					// traitement de la copie des services stubbed dans l'ear des services
 					bat.copyStubbedService(infosDemarche, $that, function () {
-						utils.avanceLoader($that);
+						utils.avanceLoader($that, "services-ear", "undeploy", nbEtapes, true);
 						var pathEAR = path + "\\psl-services-ear";
 						// mvn wildfly:undeploy (ear)
 						bat.undeploy($that, pathEAR, function () {
-							utils.avanceLoader($that);
+							utils.avanceLoader($that, "services-ear", "deploy", nbEtapes, true);
 							// mvn wildfly:deploy (ear)
 							bat.deploy($that, pathEAR, function () {
-								utils.avanceLoader($that);
+								utils.avanceLoader($that, "services-war", "undeploy", nbEtapes, true);
 								var pathWAR = path + "\\psl-services-war";
 								// mvn wildfly:undeploy (war)
 								bat.undeploy($that, pathWAR, function () {
-									utils.avanceLoader($that);
+									utils.avanceLoader($that, "services-war", "deploy", nbEtapes, true);
 									// mvn wildfly:deploy (war)
 									bat.deploy($that, pathWAR, function () {
-										utils.avanceLoader($that);
 										deployInfos.services = infosDemarche.versionServices;
 										$("#deploy-info-services").text(deployInfos.services);
 										if ($.isFunction(callback)) {
@@ -597,16 +667,17 @@
 
 	/**
 	 * Scénario de déploiement du framework
-	 * @param {object}   infosDemarche les informations de la démarche à déployer
-	 * @param {object}   $that         l'objet source
+	 * @param {object} infosDemarche les informations de la démarche à déployer
+	 * @param {object} $that         l'objet source
+	 * @param {number} nbEtapes      le nombre d'étapes dans le scénario
 	 * @callback callback
 	 */
-	function framework(infosDemarche, $that, callback) {
+	function framework(infosDemarche, $that, nbEtapes, callback) {
 		var path = utils.getFrameworkPath(infosDemarche);
+		utils.avanceLoader($that, "framework", "clean", nbEtapes, true);
 		bat.clean($that, path, function () {
-			utils.avanceLoader($that);
+			utils.avanceLoader($that, "framework", "install", nbEtapes, true);
 			bat.install($that, path, function () {
-				utils.avanceLoader($that);
 				if ($.isFunction(callback)) {
 					callback();
 				}
@@ -662,23 +733,24 @@
 	 * - mvn wildfly:undeploy
 	 * - mvn wildfly:deploy
 	 * @param {object}   infosDemarche les informations de la démarche à deployer
-	 * @param {object}   $that         l'objet source
+	 * @param {object} $that         l'objet source
+	 * @param {number} nbEtapes      le nombre d'étapes du scénario
 	 * @callback callback
 	 */
-	function demarche(infosDemarche, $that, callback) {
+	function demarche(infosDemarche, $that, nbEtapes, callback) {
 		var path = infosDemarche.code;
 		// mvn clean
+		utils.avanceLoader($that, "demarche", "clean", nbEtapes, true);
 		bat.clean($that, path, function () {
-			utils.avanceLoader($that);
+			utils.avanceLoader($that, "demarche", "install", nbEtapes, true);
 			// mvn install
 			bat.install($that, path, function () {
-				utils.avanceLoader($that);
+				utils.avanceLoader($that, "demarche", "undeploy", nbEtapes, true);
 				// mvn wildfly:undeploy
 				bat.undeploy($that, path, function () {
-					utils.avanceLoader($that);
+					utils.avanceLoader($that, "demarche", "deploy", nbEtapes, true);
 					// mvn wildfly:deploy
 					bat.deploy($that, path, function () {
-						utils.avanceLoader($that);
 						if ($.inArray(infosDemarche.code, deployInfos.demarches) == -1) {
 							deployInfos.demarches.push(infosDemarche.code);
 							ui.drawDeployInfosDemarche(infosDemarche);
@@ -694,6 +766,62 @@
 		});
 	}
 
+	/**
+	 * Scénario de déploiement simple de la démarche sans build de framework ou démarche ni déploiement des services.
+	 * - mvn undeploy
+	 * - mvn deploy
+	 * @param {object}   infosDemarche les informations de la démarche.
+	 * @param {object}   $that         l'objet source
+	 * @param {number}   nbEtapes      le nombre d'étapes du scénario
+	 * @callback callback
+	 */
+	function demarcheDeploySimple(infosDemarche, $that, nbEtapes, callback) {
+		var path = infosDemarche.code;
+		// mvn wildfly:undeploy
+		utils.avanceLoader($that, "demarche", "undeploy", nbEtapes, true);
+		bat.undeploy($that, path, function () {
+			utils.avanceLoader($that, "demarche", "deploy", nbEtapes, true);
+			// mvn wildfly:deploy
+			bat.deploy($that, path, function () {
+				if ($.inArray(infosDemarche.code, deployInfos.demarches) == -1) {
+					deployInfos.demarches.push(infosDemarche.code);
+					ui.drawDeployInfosDemarche(infosDemarche);
+				}
+				$that.parents("tr:first").removeClass("danger").addClass("success");
+				ui.removeLoader($that.parents("tr:first"));
+				if ($.isFunction(callback)) {
+					callback();
+				}
+			});
+		});
+	}
+
+	/**
+	 * Scénario de build simple de la démarche sans action sur les services ni sur le framework et sans déploiement.
+	 * - mvn clean
+	 * - mvn install
+	 * @param {object}   infosDemarche les informations de la démarche
+	 * @param {object}   $that         l'objet source
+	 * @param {number}   nbEtapes      le nombre d'étapes du scénario
+	 * @callback callback
+	 */
+	function demarcheBuildSimple(infosDemarche, $that, nbEtapes, callback) {
+		var path = infosDemarche.code;
+		// mvn clean
+		utils.avanceLoader($that, "demarche", "clean", nbEtapes, true);
+		bat.clean($that, path, function () {
+			utils.avanceLoader($that, "demarche", "install", nbEtapes, true);
+			// mvn install
+			bat.install($that, path, function () {
+				$that.parents("tr:first").removeClass("danger").addClass("success");
+				ui.removeLoader($that.parents("tr:first"));
+				if ($.isFunction(callback)) {
+					callback();
+				}
+			});
+		});
+	}
+
 	$(function () {
 		// initialisation de la page
 		start();
@@ -702,24 +830,92 @@
 		$("body").on("click", "#listeProjets .build", function () {
 			var $that = $(this),
 				data_demarche = $that.data("demarche"),
-				infosDemarche = new DemarcheInfos();
+				infosDemarche = new DemarcheInfos(),
+				nbEtapes = 18;
 			if (data_demarche != null) {
 				ui.addLoader($that.parents("tr:first"));
 				infosDemarche.code = data_demarche.dir;
 				incrementEtape($that, true);
 				// récupération des informations du POM de la démarche
 				bat.getInfosPOM(infosDemarche, $that, function () {
-					utils.avanceLoader($that);
+					if (utils.isServicesMandatory() && utils.isStubbed() && infosDemarche.versionServices != deployInfos.services) {
+						nbEtapes = 18;
+					}
+					utils.avanceLoader($that, "demarche", "getInfos", nbEtapes, true);
 					// traitement des services stubbeds
-					stubbedService(infosDemarche, $that, function () {
+					stubbedService(infosDemarche, $that, nbEtapes, false, function () {
 						// traitement des services
-						services(infosDemarche, $that, function () {
+						services(infosDemarche, $that, false, nbEtapes, function () {
 							// traitement du framework
-							framework(infosDemarche, $that, function () {
+							framework(infosDemarche, $that, nbEtapes, function () {
 								// traitement de la démarche
-								demarche(infosDemarche, $that, null);
+								demarche(infosDemarche, $that, nbEtapes, null);
 							});
 						});
+					});
+				});
+			} else {
+				alert("La démarche n'existe pas");
+			}
+		}).on("click", "#listeProjets .deployFull", function () {
+			var $that = $(this),
+				data_demarche = $that.parents(".btn-group").find(".build").data("demarche"),
+				infosDemarche = new DemarcheInfos(),
+				nbEtapes = 18;
+			if (data_demarche != null) {
+				ui.addLoader($that.parents("tr:first"));
+				infosDemarche.code = data_demarche.dir;
+				incrementEtape($that, true);
+				// récupération des informations du POM de la démarche
+				bat.getInfosPOM(infosDemarche, $that, function () {
+					utils.avanceLoader($that, "demarche", "getInfos", nbEtapes);
+					// traitement des services stubbeds
+					stubbedService(infosDemarche, $that, true, nbEtapes, function () {
+						// traitement des services
+						services(infosDemarche, $that, true, nbEtapes, function () {
+							// traitement du framework
+							framework(infosDemarche, $that, nbEtapes, function () {
+								// traitement de la démarche
+								demarche(infosDemarche, $that, nbEtapes, null);
+							});
+						});
+					});
+				});
+			} else {
+				alert("La démarche n'existe pas");
+			}
+		}).on("click", "#listeProjets .deploySimple", function () {
+			var $that = $(this),
+				data_demarche = $that.parents(".btn-group").find(".build").data("demarche"),
+				infosDemarche = new DemarcheInfos(),
+				nbEtapes = 2;
+			if (data_demarche != null) {
+				ui.addLoader($that.parents("tr:first"));
+				infosDemarche.code = data_demarche.dir;
+				incrementEtape($that, true);
+				// récupération des informations du POM de la démarche
+				bat.getInfosPOM(infosDemarche, $that, function () {
+					// traitement de la démarche
+					demarcheDeploySimple(infosDemarche, $that, nbEtapes, null);
+				});
+			} else {
+				alert("La démarche n'existe pas");
+			}
+		}).on("click", "#listeProjets .buildSimple", function () {
+			var $that = $(this),
+				data_demarche = $that.parents(".btn-group").find(".build").data("demarche"),
+				infosDemarche = new DemarcheInfos(),
+				nbEtapes = 5;
+			if (data_demarche != null) {
+				ui.addLoader($that.parents("tr:first"));
+				infosDemarche.code = data_demarche.dir;
+				incrementEtape($that, true);
+				// récupération des informations du POM de la démarche
+				bat.getInfosPOM(infosDemarche, $that, function () {
+					// traitement du framework
+					framework(infosDemarche, $that, nbEtapes, function () {
+						// traitement de la démarche
+						demarcheBuildSimple(infosDemarche, $that, nbEtapes, null);
 					});
 				});
 			} else {
