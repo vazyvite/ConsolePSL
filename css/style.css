@@ -37,6 +37,13 @@ h2 {
 h3 {
   margin-top: 0; }
 
+/* line 23, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_global.scss */
+summary {
+  cursor: pointer; }
+  /* line 25, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_global.scss */
+  summary h1, summary h2, summary h3, summary h4, summary h5, summary h6 {
+    display: inline-block; }
+
 /* line 3, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_charteDILA.scss */
 .dila-circle {
   display: inline-block;
@@ -149,7 +156,8 @@ td details .container {
 
 /* line 2, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_modal.scss */
 .modal .modal-body {
-  max-height: 500px; }
+  max-height: 500px;
+  overflow-y: auto; }
 
 /* line 2, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_form.scss */
 .form-control:focused {
@@ -161,5 +169,13 @@ td details .container {
   /* line 7, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_form.scss */
   .form-control[aria-invalid='true']:focused {
     box-shadow: 0 0 5px firebrick; }
+
+/* line 1, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_popover.scss */
+.infobulle {
+  color: #4D96D2; }
+
+/* line 4, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_popover.scss */
+.popover {
+  width: 200px; }
 
 /*# sourceMappingURL=style.css.map */
