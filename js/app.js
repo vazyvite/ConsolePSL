@@ -13,6 +13,7 @@
 	function DemarcheInfos() {
 		var that = this;
 		that.code = "";
+		that.codeDemarche = "";
 		that.versionServices = "";
 		that.versionFramework = "";
 	}
@@ -92,7 +93,7 @@
 						id: "build" + demarche.code,
 						'aria-describedby': idDemarche,
 						type: "button"
-					}).addClass("btn btn-default build").data({demarche: demarche}).appendTo($btnGroup);
+					}).addClass("btn btn-default build").appendTo($btnGroup);
 				// glyphicon du bouton principal
 				$("<span>").addClass("glyphicon glyphicon-send").appendTo(btnPrincipal);
 				// le bouton Caret
@@ -119,7 +120,7 @@
 			 */
 			creerTableLineDemarche: function (demarche, $table) {
 				var idDemarche = "lblDemarche_" + demarche.name,
-					$ligne = $("<tr>"),
+					$ligne = $("<tr>").data({demarche: demarche}),
 					$cel1 = $("<td>").attr("id", "lblDemarche_" + demarche.name),
 					$infosDemarche = $("<details>").appendTo($cel1),
 					$cel2 = $("<td>"),
@@ -229,6 +230,14 @@
 			},
 
 			/**
+			 * Indique si l'option "Générer les données spécifiques.
+			 * @returns {boolean}
+			 */
+			isResetDonneesSpecifiques: function () {
+				return ($("#isResetDonneesSpecifiques").is(":checked")) ? true : false;
+			},
+
+			/**
 			 * Indique si l'option "Déploiement des services obligatoire" a été activée
 			 * @returns {boolean}
 			 */
@@ -281,9 +290,9 @@
 			getServicesPath: function (infosDemarche) {
 				var path = "";
 				if (utils.isSnapshot(infosDemarche.versionServices)) {
-					path = (utils.isBranche(infosDemarche.versionServices)) ? "services-branche" : "services";
+					path = (utils.isBranche(infosDemarche.versionServices)) ? app.settings.dir.brancheServices : app.settings.dir.trunkServices;
 				} else {
-					path = "versions services\\psl-services-" + infosDemarche.versionServices;
+					path = app.settings.dir.versionServices + "\\psl-services-" + infosDemarche.versionServices;
 				}
 				return path;
 			},
@@ -296,9 +305,9 @@
 			getFrameworkPath: function (infosDemarche) {
 				var path = "";
 				if (utils.isSnapshot(infosDemarche.versionFramework)) {
-					path = (utils.isBranche(infosDemarche.versionFramework)) ? "services-branche\\psl-demarche-framework" : "Framework";
+					path = (utils.isBranche(infosDemarche.versionFramework)) ? app.settings.dir.brancheServices + "\\psl-demarche-framework" : app.settings.dir.trunkframework;
 				} else {
-					path = "versions services\\psl-services-" + infosDemarche.versionFramework + "\\psl-demarche-framework";
+					path = app.settings.dir.versionServices + "\\psl-services-" + infosDemarche.versionFramework + "\\psl-demarche-framework";
 				}
 				return path;
 			},
@@ -447,7 +456,7 @@
 			 * @callback callback
 			 */
 			copyStubbedService: function (infosDemarche, $that, callback) {
-				var path = "bouchons\\psl-teledossier-service-stubbed-ejb",
+				var path = app.settings.dir.stub + "\\psl-teledossier-service-stubbed-ejb",
 					pathService = utils.getServicesPath(infosDemarche);
 				if (utils.isStubbed()) {
 					require('child_process').exec('cmd /c copyStubbed.bat "' + path + '" "' + pathService + '" "' + infosDemarche.versionServices + '"', {
@@ -534,7 +543,19 @@
 				var json = JSON.parse(localStorage.getItem("workspace"));
 				if (!json) {
 					json = {
-						"workspace": "D:\\projetsDILA\\src"
+						"workspace": "D:\\projetsDILA\\src",
+						"pg": {
+							"url": "localhost:5432\\psl",
+							"username": "psl",
+							"password": "demarche_psl"
+						},
+						"dir": {
+							"versionServices": "versions services",
+							"brancheServices": "services-branche",
+							"trunkServices": "services",
+							"trunkframework": "Framework",
+							"stub": "bouchons"
+						}
 					};
 				}
 				if ($.isFunction(callback)) {
@@ -591,7 +612,7 @@
 	 */
 	function stubbedService(infosDemarche, $that, isForced, nbEtapes, callback) {
 		if (isForced || (utils.isServicesMandatory() && utils.isStubbed() && infosDemarche.versionServices != deployInfos.services)) {
-			var path = "bouchons\\psl-teledossier-service-stubbed-ejb";
+			var path = app.settings.dir.stub + "\\psl-teledossier-service-stubbed-ejb";
 			utils.avanceLoader($that, "stub", "create", nbEtapes, true);
 			bat.modifyStubbedPom(infosDemarche, $that, path, function () {
 				utils.avanceLoader($that, "stub", "clean", nbEtapes, true);
@@ -708,22 +729,40 @@
 	 */
 	function start() {
 		// récupération des settings
-		getCoreDirectory(function () {
-			var fs = require("fs");
-			bat.getSettings(function (json) {
-				if (json != null) {
-					app.settings = json;
-					app.settings.workspace = json.workspace;
-					// récupération des informations des démarches
-					bat.getDataDemarches(function (json) {
-						if (json != null) {
-							app.data = json;
-							ui.creerTableDemarches();
-						}
-					});
-				}
-			});
+//		getCoreDirectory(function () {
+		var fs = require("fs");
+		bat.getSettings(function (json) {
+			if (json != null) {
+				app.settings = json;
+				// récupération des informations des démarches
+				bat.getDataDemarches(function (json) {
+					if (json != null) {
+						app.data = json;
+						ui.creerTableDemarches();
+					}
+				});
+			}
 		});
+//		});
+	}
+
+	function resetDonneesSpecifiques(infosDemarche, callback) {
+		if (utils.isResetDonneesSpecifiques()) {
+			var pg = require('pg'),
+				username = app.settings.pg.username,
+				password = app.settings.pg.password,
+				url = app.settings.pg.url,
+				connectionString = "postgres://" + username + ":" + password + "@" + url,
+				client = new pg.Client(connectionString),
+				query = null;
+			client.connect();
+			query = client.query("UPDATE exe_demarche SET initialisation_realisee=FALSE WHERE code_demarche = '" + infosDemarche.codeDemarche + "'");
+			query.on('end', callback);
+		} else {
+			if ($.isFunction(callback)) {
+				callback();
+			}
+		}
 	}
 
 	/**
@@ -746,20 +785,22 @@
 			// mvn install
 			bat.install($that, path, function () {
 				utils.avanceLoader($that, "demarche", "undeploy", nbEtapes, true);
-				// mvn wildfly:undeploy
-				bat.undeploy($that, path, function () {
-					utils.avanceLoader($that, "demarche", "deploy", nbEtapes, true);
-					// mvn wildfly:deploy
-					bat.deploy($that, path, function () {
-						if ($.inArray(infosDemarche.code, deployInfos.demarches) == -1) {
-							deployInfos.demarches.push(infosDemarche.code);
-							ui.drawDeployInfosDemarche(infosDemarche);
-						}
-						$that.parents("tr:first").removeClass("danger").addClass("success");
-						ui.removeLoader($that.parents("tr:first"));
-						if ($.isFunction(callback)) {
-							callback();
-						}
+				resetDonneesSpecifiques(infosDemarche, function () {
+					// mvn wildfly:undeploy
+					bat.undeploy($that, path, function () {
+						utils.avanceLoader($that, "demarche", "deploy", nbEtapes, true);
+						// mvn wildfly:deploy
+						bat.deploy($that, path, function () {
+							if ($.inArray(infosDemarche.code, deployInfos.demarches) == -1) {
+								deployInfos.demarches.push(infosDemarche.code);
+								ui.drawDeployInfosDemarche(infosDemarche);
+							}
+							$that.parents("tr:first").removeClass("danger").addClass("success");
+							ui.removeLoader($that.parents("tr:first"));
+							if ($.isFunction(callback)) {
+								callback();
+							}
+						});
 					});
 				});
 			});
@@ -779,19 +820,21 @@
 		var path = infosDemarche.code;
 		// mvn wildfly:undeploy
 		utils.avanceLoader($that, "demarche", "undeploy", nbEtapes, true);
-		bat.undeploy($that, path, function () {
-			utils.avanceLoader($that, "demarche", "deploy", nbEtapes, true);
-			// mvn wildfly:deploy
-			bat.deploy($that, path, function () {
-				if ($.inArray(infosDemarche.code, deployInfos.demarches) == -1) {
-					deployInfos.demarches.push(infosDemarche.code);
-					ui.drawDeployInfosDemarche(infosDemarche);
-				}
-				$that.parents("tr:first").removeClass("danger").addClass("success");
-				ui.removeLoader($that.parents("tr:first"));
-				if ($.isFunction(callback)) {
-					callback();
-				}
+		resetDonneesSpecifiques(infosDemarche, function () {
+			bat.undeploy($that, path, function () {
+				utils.avanceLoader($that, "demarche", "deploy", nbEtapes, true);
+				// mvn wildfly:deploy
+				bat.deploy($that, path, function () {
+					if ($.inArray(infosDemarche.code, deployInfos.demarches) == -1) {
+						deployInfos.demarches.push(infosDemarche.code);
+						ui.drawDeployInfosDemarche(infosDemarche);
+					}
+					$that.parents("tr:first").removeClass("danger").addClass("success");
+					ui.removeLoader($that.parents("tr:first"));
+					if ($.isFunction(callback)) {
+						callback();
+					}
+				});
 			});
 		});
 	}
@@ -829,19 +872,20 @@
 		// mise en place des évènements
 		$("body").on("click", "#listeProjets .build", function () {
 			var $that = $(this),
-				data_demarche = $that.data("demarche"),
+				data_demarche = $that.parents("tr:first").data("demarche"),
 				infosDemarche = new DemarcheInfos(),
-				nbEtapes = 18;
+				nbEtapes = 8;
 			if (data_demarche != null) {
 				ui.addLoader($that.parents("tr:first"));
 				infosDemarche.code = data_demarche.dir;
+				infosDemarche.codeDemarche = data_demarche.code;
 				incrementEtape($that, true);
 				// récupération des informations du POM de la démarche
 				bat.getInfosPOM(infosDemarche, $that, function () {
 					if (utils.isServicesMandatory() && utils.isStubbed() && infosDemarche.versionServices != deployInfos.services) {
-						nbEtapes = 18;
+						nbEtapes = 19;
 					}
-					utils.avanceLoader($that, "demarche", "getInfos", nbEtapes, true);
+					utils.avanceLoader($that, "demarche", "getInfos", nbEtapes, false);
 					// traitement des services stubbeds
 					stubbedService(infosDemarche, $that, nbEtapes, false, function () {
 						// traitement des services
@@ -859,16 +903,17 @@
 			}
 		}).on("click", "#listeProjets .deployFull", function () {
 			var $that = $(this),
-				data_demarche = $that.parents(".btn-group").find(".build").data("demarche"),
+				data_demarche = $that.parents("tr:first").data("demarche"),
 				infosDemarche = new DemarcheInfos(),
-				nbEtapes = 18;
+				nbEtapes = 19;
 			if (data_demarche != null) {
 				ui.addLoader($that.parents("tr:first"));
 				infosDemarche.code = data_demarche.dir;
+				infosDemarche.codeDemarche = data_demarche.code;
 				incrementEtape($that, true);
 				// récupération des informations du POM de la démarche
 				bat.getInfosPOM(infosDemarche, $that, function () {
-					utils.avanceLoader($that, "demarche", "getInfos", nbEtapes);
+					utils.avanceLoader($that, "demarche", "getInfos", nbEtapes, false);
 					// traitement des services stubbeds
 					stubbedService(infosDemarche, $that, true, nbEtapes, function () {
 						// traitement des services
@@ -886,15 +931,17 @@
 			}
 		}).on("click", "#listeProjets .deploySimple", function () {
 			var $that = $(this),
-				data_demarche = $that.parents(".btn-group").find(".build").data("demarche"),
+				data_demarche = $that.parents("tr:first").data("demarche"),
 				infosDemarche = new DemarcheInfos(),
-				nbEtapes = 2;
+				nbEtapes = 3;
 			if (data_demarche != null) {
 				ui.addLoader($that.parents("tr:first"));
 				infosDemarche.code = data_demarche.dir;
+				infosDemarche.codeDemarche = data_demarche.code;
 				incrementEtape($that, true);
 				// récupération des informations du POM de la démarche
 				bat.getInfosPOM(infosDemarche, $that, function () {
+					utils.avanceLoader($that, "demarche", "getInfos", nbEtapes, false);
 					// traitement de la démarche
 					demarcheDeploySimple(infosDemarche, $that, nbEtapes, null);
 				});
@@ -903,15 +950,17 @@
 			}
 		}).on("click", "#listeProjets .buildSimple", function () {
 			var $that = $(this),
-				data_demarche = $that.parents(".btn-group").find(".build").data("demarche"),
+				data_demarche = $that.parents("tr:first").data("demarche"),
 				infosDemarche = new DemarcheInfos(),
-				nbEtapes = 5;
+				nbEtapes = 6;
 			if (data_demarche != null) {
 				ui.addLoader($that.parents("tr:first"));
 				infosDemarche.code = data_demarche.dir;
+				infosDemarche.codeDemarche = data_demarche.code;
 				incrementEtape($that, true);
 				// récupération des informations du POM de la démarche
 				bat.getInfosPOM(infosDemarche, $that, function () {
+					utils.avanceLoader($that, "demarche", "getInfos", nbEtapes, false);
 					// traitement du framework
 					framework(infosDemarche, $that, nbEtapes, function () {
 						// traitement de la démarche
@@ -937,10 +986,11 @@
 			$("#modalLogs").data("cible", null);
 		}).on("click", "summary", function () {
 			var $that = $(this),
-				demarche = $that.parents("tr").find(".build").data("demarche"),
+				demarche_data = $that.parents("tr").find(".build").data("demarche"),
 				infosDemarche = new DemarcheInfos();
-			if (demarche != null) {
-				infosDemarche.code = demarche.dir;
+			if (demarche_data != null) {
+				infosDemarche.code = demarche_data.dir;
+				infosDemarche.codeDemarche = demarche_data.code;
 				bat.getInfosPOM(infosDemarche, $that, function () {
 					$that.parents("details").find(".infosDemarche-vServices").text(infosDemarche.versionServices);
 					$that.parents("details").find(".infosDemarche-vFramework").text(infosDemarche.versionFramework);
@@ -1002,8 +1052,17 @@
 
 		$("#settings").on("click", function () {
 			$("#settingsWorkspace").val(app.settings.workspace);
+			$("#urlPGSQL").val(app.settings.pg.url);
+			$("#userPGSQL").val(app.settings.pg.username);
+			$("#passwordPGSQL").val(app.settings.pg.password);
+			$("#dirVersionServices").val(app.settings.dir.versionServices);
+			$("#dirServiceBranche").val(app.settings.dir.brancheServices);
+			$("#dirServiceTrunk").val(app.settings.dir.trunkServices);
+			$("#dirFrameworkTrunk").val(app.settings.dir.trunkframework);
+			$("#dirStubBouchon").val(app.settings.dir.stub);
 			$("#modalSettings").modal("show");
 		});
+
 		$("#validSettings").on("click", function () {
 			var isValidForm = true;
 			$("#modalSettings input").each(function () {
@@ -1020,10 +1079,19 @@
 			});
 			if (isValidForm) {
 				app.settings.workspace = $("#settingsWorkspace").val();
+				app.settings.dir.versionServices = $("#dirVersionServices").val();
+				app.settings.dir.brancheServices = $("#dirServiceBranche").val();
+				app.settings.dir.trunkServices = $("#dirServiceTrunk").val();
+				app.settings.dir.trunkframework = $("#dirFrameworkTrunk").val();
+				app.settings.pg.url = $("#urlPGSQL").val();
+				app.settings.pg.username = $("#userPGSQL").val();
+				app.settings.pg.password = $("#passwordPGSQL").val();
+				app.settings.dir.stub = $("#dirStubBouchon").val();
 				bat.sauverSettings();
 				$("#modalSettings").modal("hide");
 			}
 		});
+
 		$(".form-control").on("change", function () {
 			var $this = $(this),
 				isValide = form.valideChamp($this);
@@ -1033,5 +1101,7 @@
 				form.removeErreur($this);
 			}
 		});
+
+		$(".infobulle").popover();
 	});
 }(jQuery));

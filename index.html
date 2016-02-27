@@ -76,17 +76,25 @@
 								Toujours déployer les services avec les démarches
 							</label>
 						</div>
+						<div class="checkbox">
+							<label class="control-label" for="isResetDonneesSpecifiques">
+								<input type="checkbox" id="isResetDonneesSpecifiques" />
+								Générer les données spécifiques
+							</label>
+						</div>
 					</div>
 				</div>
 			</div>
 		</main>
+
+		<!-- MODALES -->
 
 		<div class="modal fade" id="modalLogs" tabindex="-1" role="dialog">
 			<div class="modal-dialog modal-lg">
 				<div class="modal-content">
 					<div class="modal-header">
 						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-						<h4 class="modal-title">Logs</h4>
+						<h3 class="modal-title">Logs</h3>
 					</div>
 					<pre class="modal-body"></pre>
 					<div class="modal-footer">
@@ -103,7 +111,7 @@
 					<form action="#">
 						<div class="modal-header">
 							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-							<h4 class="modal-title">Nouvelle Démarche</h4>
+							<h3 class="modal-title">Nouvelle Démarche</h3>
 						</div>
 						<div class="modal-body">
 							<div class="form-group">
@@ -139,15 +147,87 @@
 				<div class="modal-content form-horizontal">
 					<div class="modal-header">
 						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-						<h4 class="modal-title">Settings</h4>
+						<h3 class="modal-title">Settings</h3>
 					</div>
 					<div class="modal-body">
-						<div class="form-group">
-							<label for="nomDemarche" class="col-md-4 control-label">Workspace</label>
-							<div class="col-md-8">
-								<input type="text" required class="form-control" id="settingsWorkspace" />
+						<!-- Répertoires -->
+						<details>
+							<summary><h4>Répertoires</h4></summary>
+							<div class="form-group">
+								<label for="settingsWorkspace" class="col-md-4 control-label">Workspace</label>
+								<div class="col-md-8">
+									<input type="text" required class="form-control" id="settingsWorkspace" />
+								</div>
 							</div>
-						</div>
+							<div class="form-group">
+								<label for="dirVersionServices" class="col-md-4 control-label">
+									Version des services
+									<span class="glyphicon glyphicon-info-sign infobulle" data-toggle="popover" data-content="Contient toutes les versions des services. Ce répertoire doit se trouver dans le workspace défini plus haut."></span>
+								</label>
+								<div class="col-md-8">
+									<input type="text" required class="form-control" id="dirVersionServices" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="dirServiceBranche" class="col-md-4 control-label">
+									Service Branche
+									<span class="glyphicon glyphicon-info-sign infobulle" data-toggle="popover" data-content="Contient la branche des services. Ce répertoire doit se trouver dans le workspace défini plus haut."></span>
+								</label>
+								<div class="col-md-8">
+									<input type="text" required class="form-control" id="dirServiceBranche" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="dirServiceTrunk" class="col-md-4 control-label">
+									Service Trunk
+									<span class="glyphicon glyphicon-info-sign infobulle" data-toggle="popover" data-content="Contient le trunk des services. Ce répertoire doit se trouver dans le workspace défini plus haut."></span>
+								</label>
+								<div class="col-md-8">
+									<input type="text" required class="form-control" id="dirServiceTrunk" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="dirFrameworkTrunk" class="col-md-4 control-label">
+									Framework Trunk
+									<span class="glyphicon glyphicon-info-sign infobulle" data-toggle="popover" data-content="Contient le trunk du Framework. Ce répertoire doit se trouver dans le workspace défini plus haut."></span>
+								</label>
+								<div class="col-md-8">
+									<input type="text" required class="form-control" id="dirFrameworkTrunk" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="dirStubBouchon" class="col-md-4 control-label">
+									Bouchons (stub)
+									<span class="glyphicon glyphicon-info-sign infobulle" data-toggle="popover" data-content="Contient le Service stubbé. Ce répertoire doit se trouver dans le workspace défini plus haut."></span>
+								</label>
+								<div class="col-md-8">
+									<input type="text" required class="form-control" id="dirStubBouchon" />
+								</div>
+							</div>
+						</details>
+
+						<!-- PostgreSQL -->
+						<details>
+							<summary><h4>PostgreSQL</h4></summary>
+							<div class="form-group">
+								<label for="urlPGSQL" class="col-md-4 control-label">url</label>
+								<div class="col-md-8">
+									<input type="text" required class="form-control" id="urlPGSQL" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="userPGSQL" class="col-md-4 control-label">user</label>
+								<div class="col-md-8">
+									<input type="text" required class="form-control" id="userPGSQL" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="passwordPGSQL" class="col-md-4 control-label">password</label>
+								<div class="col-md-8">
+									<input type="password" required class="form-control" id="passwordPGSQL" />
+								</div>
+							</div>
+						</details>
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-primary" id="validSettings">Valider</button>
