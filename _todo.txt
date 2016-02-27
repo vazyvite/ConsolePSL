@@ -1,8 +1,7 @@
 - Faire en sorte d'afficher les logs de manière plus ordonnée.
 - Faire en sorte que les logs s'incrémentent plutôt qu'ils ne s'écrasent.
-- Faire en sorte que les URLS des projets soient configurable plutôt que définis en dur dans le code
-- Ajouter le nom de l'étape en cours dans la barre de chargement
 - Ajouter un chargement des éléments déployés sur le serveur à l'initialisation de l'application
 - Ajouter un message d'erreur si le Framework SNAPSHOT n'est pas de la version attendue
 - Ajouter un message d'erreur si les services SNAPSHOT ne sont pas de la version attendue
 - indiquer l'heure de dernier déploiement
+- Gérer les versions Release du Framework
