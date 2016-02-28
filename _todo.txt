@@ -1,7 +1,19 @@
-- Faire en sorte d'afficher les logs de manière plus ordonnée.
-- Faire en sorte que les logs s'incrémentent plutôt qu'ils ne s'écrasent.
-- Ajouter un chargement des éléments déployés sur le serveur à l'initialisation de l'application
-- Ajouter un message d'erreur si le Framework SNAPSHOT n'est pas de la version attendue
-- Ajouter un message d'erreur si les services SNAPSHOT ne sont pas de la version attendue
-- indiquer l'heure de dernier déploiement
-- Gérer les versions Release du Framework
+Evolutions
+---------------------------------------
+EVO001 - Faire en sorte d'afficher les logs de manière plus ordonnée.
+EVO002 - Faire en sorte que les logs s'incrémentent plutôt qu'ils ne s'écrasent.
+EVO003 - Ajouter un chargement des éléments déployés sur le serveur à l'initialisation de l'application
+EVO004 - Ajouter un message d'erreur si le Framework SNAPSHOT n'est pas de la version attendue
+EVO005 - Ajouter un message d'erreur si les services SNAPSHOT ne sont pas de la version attendue
+
+Anomalies
+---------------------------------------
+ERR01 - Gérer les versions Release du Framework
+
+
+
+Releases Notes
+---------------------------------------
+0.2.4
+EVO006 - Ajouter l'heure du dernier déploiement
+ERR01 - Préparation correction de prise en charge Releases Framework
