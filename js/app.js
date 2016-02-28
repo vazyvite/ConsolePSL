@@ -133,7 +133,7 @@
 				$contentInfosDemarche = $("<div>").addClass("container").appendTo($infosDemarche);
 				ui.createFormGroupStatic("version services : ", "", demarche.name, "infosDemarche-vServices").appendTo($contentInfosDemarche);
 				ui.createFormGroupStatic("version framework : ", "", demarche.name, "infosDemarche-vFramework").appendTo($contentInfosDemarche);
-				ui.createFormGroupStatic("dernier déploy : ", "", "", "infosDemarche-lastModified").appendTo($contentInfosDemarche);
+				ui.createFormGroupStatic("dernier déploiement : ", "", "", "infosDemarche-lastModified").appendTo($contentInfosDemarche);
 				$cel1.appendTo($ligne);
 				ui.creerActionsDropDown(idDemarche, demarche).appendTo($cel2);
 				$("<button>").attr({
