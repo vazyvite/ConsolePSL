@@ -133,6 +133,7 @@
 				$contentInfosDemarche = $("<div>").addClass("container").appendTo($infosDemarche);
 				ui.createFormGroupStatic("version services : ", "", demarche.name, "infosDemarche-vServices").appendTo($contentInfosDemarche);
 				ui.createFormGroupStatic("version framework : ", "", demarche.name, "infosDemarche-vFramework").appendTo($contentInfosDemarche);
+				ui.createFormGroupStatic("dernier déploy : ", "", "", "infosDemarche-lastModified").appendTo($contentInfosDemarche);
 				$cel1.appendTo($ligne);
 				ui.creerActionsDropDown(idDemarche, demarche).appendTo($cel2);
 				$("<button>").attr({
@@ -154,8 +155,8 @@
 			 */
 			createFormGroupStatic: function (label, text, id, className) {
 				var $formGroup = $("<div>").addClass("form-group row"),
-					$groupField = $("<div>").addClass("col-xs-7");
-				$("<label>").addClass("control-label col-xs-5").text(label).attr("for", "input_" + id).appendTo($formGroup);
+					$groupField = $("<div>").addClass("col-xs-6");
+				$("<label>").addClass("control-label col-xs-6").text(label).attr("for", "input_" + id).appendTo($formGroup);
 				$groupField.appendTo($formGroup);
 				$("<span>").addClass("form-control-static " + className).text(text).appendTo($groupField);
 				return $formGroup;
@@ -306,8 +307,10 @@
 				var path = "";
 				if (utils.isSnapshot(infosDemarche.versionFramework)) {
 					path = (utils.isBranche(infosDemarche.versionFramework)) ? app.settings.dir.brancheServices + "\\psl-demarche-framework" : app.settings.dir.trunkframework;
+//					path = (utils.isBranche(infosDemarche.versionFramework)) ? app.settings.dir.brancheServices + "\\psl-demarche-framework" : app.settings.dir.trunkframework + "\\trunk";
 				} else {
 					path = app.settings.dir.versionServices + "\\psl-services-" + infosDemarche.versionFramework + "\\psl-demarche-framework";
+//					path = (utils.isBranche(infosDemarche.versionFramework)) ? app.settings.dir.versionServices + "\\psl-services-" + infosDemarche.versionFramework + "\\psl-demarche-framework" : app.settings.dir.trunkframework + "\\branche\\psl-demarche-framework-" + infosDemarche.versionFramework;
 				}
 				return path;
 			},
@@ -795,7 +798,7 @@
 								deployInfos.demarches.push(infosDemarche.code);
 								ui.drawDeployInfosDemarche(infosDemarche);
 							}
-							$that.parents("tr:first").removeClass("danger").addClass("success");
+							$that.parents("tr:first").removeClass("danger").addClass("success").find("details .infosDemarche-lastModified").data("lastModified", new Date());
 							ui.removeLoader($that.parents("tr:first"));
 							if ($.isFunction(callback)) {
 								callback();
@@ -829,7 +832,7 @@
 						deployInfos.demarches.push(infosDemarche.code);
 						ui.drawDeployInfosDemarche(infosDemarche);
 					}
-					$that.parents("tr:first").removeClass("danger").addClass("success");
+					$that.parents("tr:first").removeClass("danger").addClass("success").find("details .infosDemarche-lastModified").data("lastModified", new Date());
 					ui.removeLoader($that.parents("tr:first"));
 					if ($.isFunction(callback)) {
 						callback();
@@ -986,7 +989,7 @@
 			$("#modalLogs").data("cible", null);
 		}).on("click", "summary", function () {
 			var $that = $(this),
-				demarche_data = $that.parents("tr").find(".build").data("demarche"),
+				demarche_data = $that.parents("tr").data("demarche"),
 				infosDemarche = new DemarcheInfos();
 			if (demarche_data != null) {
 				infosDemarche.code = demarche_data.dir;
@@ -994,6 +997,22 @@
 				bat.getInfosPOM(infosDemarche, $that, function () {
 					$that.parents("details").find(".infosDemarche-vServices").text(infosDemarche.versionServices);
 					$that.parents("details").find(".infosDemarche-vFramework").text(infosDemarche.versionFramework);
+					var dateLastModified = $that.parents("details").find(".infosDemarche-lastModified").data("lastModified"),
+						stringDateLastModified = null,
+						todayRaw = new Date(),
+						todayDay = new Date(todayRaw.getFullYear(), todayRaw.getMonth(), todayRaw.getDate()),
+						dateDay = null;
+					if (dateLastModified != null) {
+						dateDay = new Date(dateLastModified.getFullYear(), dateLastModified.getMonth(), dateLastModified.getDate());
+						if (todayDay.getTime() == dateDay.getTime()) {
+							// c'est aujourd'hui, on affiche l'heure
+							stringDateLastModified = dateLastModified.getHours() + ":" + dateLastModified.getMinutes();
+						} else {
+							// on affiche la date
+							stringDateLastModified = dateDay.getDate() + "/" + (((dateDay.getMonth() + 1) < 10) ? "0" : "") + (dateDay.getMonth() + 1) + "/" + dateDay.getFullYear();
+						}
+					}
+					$that.parents("tr:first").find("details .infosDemarche-lastModified").text(stringDateLastModified);
 				});
 			}
 			setTimeout(function () {
