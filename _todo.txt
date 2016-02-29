@@ -8,7 +8,7 @@ EVO005 - Ajouter un message d'erreur si les services SNAPSHOT ne sont pas de la 
 
 Anomalies
 ---------------------------------------
-ERR01 - Gérer les versions Release du Framework
+
 
 
 
@@ -16,4 +16,4 @@ Releases Notes
 ---------------------------------------
 0.2.4
 EVO006 - Ajouter l'heure du dernier déploiement
-ERR01 - Préparation correction de prise en charge Releases Framework
+ERR01 - Gérer les versions Release du Framework

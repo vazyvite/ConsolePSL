@@ -306,11 +306,9 @@
 			getFrameworkPath: function (infosDemarche) {
 				var path = "";
 				if (utils.isSnapshot(infosDemarche.versionFramework)) {
-					path = (utils.isBranche(infosDemarche.versionFramework)) ? app.settings.dir.brancheServices + "\\psl-demarche-framework" : app.settings.dir.trunkframework;
-//					path = (utils.isBranche(infosDemarche.versionFramework)) ? app.settings.dir.brancheServices + "\\psl-demarche-framework" : app.settings.dir.trunkframework + "\\trunk";
+					path = (utils.isBranche(infosDemarche.versionFramework)) ? app.settings.dir.brancheServices + "\\psl-demarche-framework" : app.settings.dir.trunkframework + "\\trunk";
 				} else {
-					path = app.settings.dir.versionServices + "\\psl-services-" + infosDemarche.versionFramework + "\\psl-demarche-framework";
-//					path = (utils.isBranche(infosDemarche.versionFramework)) ? app.settings.dir.versionServices + "\\psl-services-" + infosDemarche.versionFramework + "\\psl-demarche-framework" : app.settings.dir.trunkframework + "\\branche\\psl-demarche-framework-" + infosDemarche.versionFramework;
+					path = (utils.isBranche(infosDemarche.versionFramework)) ? app.settings.dir.versionServices + "\\psl-services-" + infosDemarche.versionFramework + "\\psl-demarche-framework" : app.settings.dir.trunkframework + "\\tags\\psl-demarche-framework-" + infosDemarche.versionFramework;
 				}
 				return path;
 			},
