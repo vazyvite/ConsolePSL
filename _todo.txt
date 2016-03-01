@@ -21,3 +21,4 @@ ERR01 - Gérer les versions Release du Framework
 
 0.2.5
 EVO007 - Empêcher le lancement d'une action sur une démarche en cours.
+EVO008 - Ajouter un signe spécifique pour la version des services Stubbés pour forcer le redéploiement des services classiques en version non stubbé lorsque c'est nécessaire.

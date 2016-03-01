@@ -295,6 +295,23 @@
 			},
 
 			/**
+			 * Retourne la version des services en faisant la distinction entre les services classiques et les services stubbés.
+			 * @param   {object} infosDemarche informations sur la démarche en cours
+			 * @returns {string} la version de la démarche suffixé de "S" si la version des services correspond à une version stubbé.
+			 */
+			getVersionServices: function (infosDemarche) {
+				var version = "";
+				if (infosDemarche != null) {
+					if (utils.isStubbed(infosDemarche)) {
+						version = infosDemarche.versionServices + "S";
+					} else {
+						version = infosDemarche.versionServices;
+					}
+				}
+				return version;
+			},
+
+			/**
 			 * Créé une erreur et supprime le loader.
 			 * @param {object} $that  l'objet sur lequel l'erreur a eu lieu
 			 * @param {string} stdout les logs d'erreur
@@ -615,7 +632,7 @@
 	 * @callback callback
 	 */
 	function stubbedService(infosDemarche, $that, isForced, nbEtapes, callback) {
-		if (isForced || (utils.isServicesMandatory() && utils.isStubbed() && infosDemarche.versionServices != deployInfos.services)) {
+		if (isForced || (utils.isServicesMandatory() && utils.isStubbed() && utils.getVersionServices(infosDemarche) != deployInfos.services)) {
 			var path = app.settings.dir.stub + "\\psl-teledossier-service-stubbed-ejb";
 			loader.update($that, "stub", "create", nbEtapes, true);
 			bat.modifyStubbedPom(infosDemarche, $that, path, function () {
@@ -648,7 +665,7 @@
 	 * @callback callback
 	 */
 	function services(infosDemarche, $that, isForced, nbEtapes, callback) {
-		if (isForced || (utils.isServicesMandatory() && infosDemarche.versionServices != deployInfos.services)) {
+		if (isForced || (utils.isServicesMandatory() && utils.getVersionServices(infosDemarche) != deployInfos.services)) {
 			var path = utils.getServicesPath(infosDemarche);
 			// mvn clean
 			loader.update($that, "services", "clean", nbEtapes, true);
@@ -673,7 +690,7 @@
 									loader.update($that, "services-war", "deploy", nbEtapes, true);
 									// mvn wildfly:deploy (war)
 									bat.deploy($that, pathWAR, function () {
-										deployInfos.services = infosDemarche.versionServices;
+										deployInfos.services = utils.getVersionServices(infosDemarche);
 										$("#deploy-info-services").text(deployInfos.services);
 										if ($.isFunction(callback)) {
 											callback();
@@ -886,7 +903,7 @@
 				incrementEtape($that, true);
 				// récupération des informations du POM de la démarche
 				bat.getInfosPOM(infosDemarche, $that, function () {
-					if (utils.isServicesMandatory() && utils.isStubbed() && infosDemarche.versionServices != deployInfos.services) {
+					if (utils.isServicesMandatory() && utils.isStubbed() && utils.getVersionServices(infosDemarche) != deployInfos.services) {
 						nbEtapes = 19;
 					}
 					loader.update($that, "demarche", "getInfos", nbEtapes, false);
