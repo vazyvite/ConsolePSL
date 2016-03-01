@@ -171,13 +171,14 @@
 				if (!$ul.find("." + infosDemarche.code).size()) {
 					$("<li>").addClass("list-group-item " + infosDemarche.code).text(infosDemarche.code).appendTo($ul);
 				}
-			},
-
+			}
+		},
+		loader = {
 			/**
 			 * Ajoute un loader sur un élément cible
 			 * @param {object} $cible la cible du loader
 			 */
-			addLoader: function ($cible) {
+			add: function ($cible) {
 				if ($cible != null) {
 					var id = "loader_" + new Date().getTime(),
 						$loader = $("<div>").addClass("loader").attr("id", id).css({
@@ -198,7 +199,7 @@
 			 * Modifie la position et la taille du loader.
 			 * @param {object} $cible la cible du loader
 			 */
-			modifyLoader: function ($cible) {
+			reset: function ($cible) {
 				if ($cible != null) {
 					var $loader = $("#" + $cible.data("loader"));
 					$loader.css({
@@ -214,12 +215,39 @@
 			 * Supprime un loader de l'élément cible
 			 * @param {object} $cible la cible du loader
 			 */
-			removeLoader: function ($cible) {
+			remove: function ($cible) {
 				if ($cible != null) {
 					var loader = $("#" + $cible.data("loader"));
 					loader.remove();
 					$cible.data("loader", null);
 					$cible.find(".btn-group button").attr("disabled", false);
+				}
+			},
+
+			/**
+			 * Avance la barre de chargement.
+			 * @param {object}  $cible    l'objet correspondant à la ligne pour laquelle le loader doit être avancé
+			 * @param {string}  scenario  le nom du scéario
+			 * @param {string}  step      le nom de l'étape
+			 * @param {number}  nbEtapes	le nombre d'étapes dans le scénario
+			 * @param {boolean} increment	si on doit incrémenter le loader
+			 */
+			update: function ($cible, scenario, step, nbEtapes, increment) {
+				if ($cible != null) {
+					if (increment) {
+						incrementEtape($cible, false);
+					}
+					var $parent = $cible.parents("tr:first"),
+						etape = $cible.data("etape"),
+						loader = $("#" + $parent.data("loader")),
+						progressbar = loader.find(".progressbar"),
+						pasAvancement = 100 / nbEtapes;
+					if (!progressbar.size()) {
+						$("<div>").addClass("progressbar").appendTo(loader);
+						progressbar = loader.find(".progressbar");
+					}
+					loader.find(".loader-etape").text(scenario + "-" + step);
+					progressbar.css("width", (pasAvancement * etape) + "%");
 				}
 			}
 		},
@@ -273,7 +301,7 @@
 			 */
 			createErreur: function ($that, log) {
 				$that.parents("tr:first").data("logs", $that.data("logs") + "\n" + log).removeClass("success").addClass("danger");
-				ui.removeLoader($that.parents("tr:first"));
+				loader.remove($that.parents("tr:first"));
 			},
 
 			/**
@@ -313,33 +341,6 @@
 					path = (utils.isBranche(infosDemarche.versionFramework)) ? app.settings.dir.versionServices + "\\psl-services-" + infosDemarche.versionFramework + "\\psl-demarche-framework" : app.settings.dir.trunkframework + "\\tags\\psl-demarche-framework-" + infosDemarche.versionFramework;
 				}
 				return path;
-			},
-
-			/**
-			 * Avance la barre de chargement.
-			 * @param {object}  $cible    l'objet correspondant à la ligne pour laquelle le loader doit être avancé
-			 * @param {string}  scenario  le nom du scéario
-			 * @param {string}  step      le nom de l'étape
-			 * @param {number}  nbEtapes	le nombre d'étapes dans le scénario
-			 * @param {boolean} increment	si on doit incrémenter le loader
-			 */
-			avanceLoader: function ($cible, scenario, step, nbEtapes, increment) {
-				if ($cible != null) {
-					if (increment) {
-						incrementEtape($cible, false);
-					}
-					var $parent = $cible.parents("tr:first"),
-						etape = $cible.data("etape"),
-						loader = $("#" + $parent.data("loader")),
-						progressbar = loader.find(".progressbar"),
-						pasAvancement = 100 / nbEtapes;
-					if (!progressbar.size()) {
-						$("<div>").addClass("progressbar").appendTo(loader);
-						progressbar = loader.find(".progressbar");
-					}
-					loader.find(".loader-etape").text(scenario + "-" + step);
-					progressbar.css("width", (pasAvancement * etape) + "%");
-				}
 			}
 		},
 		bat = {
@@ -616,12 +617,12 @@
 	function stubbedService(infosDemarche, $that, isForced, nbEtapes, callback) {
 		if (isForced || (utils.isServicesMandatory() && utils.isStubbed() && infosDemarche.versionServices != deployInfos.services)) {
 			var path = app.settings.dir.stub + "\\psl-teledossier-service-stubbed-ejb";
-			utils.avanceLoader($that, "stub", "create", nbEtapes, true);
+			loader.update($that, "stub", "create", nbEtapes, true);
 			bat.modifyStubbedPom(infosDemarche, $that, path, function () {
-				utils.avanceLoader($that, "stub", "clean", nbEtapes, true);
+				loader.update($that, "stub", "clean", nbEtapes, true);
 				bat.clean($that, path, function () {
 					bat.install($that, path, function () {
-						utils.avanceLoader($that, "stub", "install", nbEtapes);
+						loader.update($that, "stub", "install", nbEtapes);
 						if ($.isFunction(callback)) {
 							callback();
 						}
@@ -650,26 +651,26 @@
 		if (isForced || (utils.isServicesMandatory() && infosDemarche.versionServices != deployInfos.services)) {
 			var path = utils.getServicesPath(infosDemarche);
 			// mvn clean
-			utils.avanceLoader($that, "services", "clean", nbEtapes, true);
+			loader.update($that, "services", "clean", nbEtapes, true);
 			bat.clean($that, path, function () {
-				utils.avanceLoader($that, "services", "install", nbEtapes, true);
+				loader.update($that, "services", "install", nbEtapes, true);
 				// mvn install
 				bat.install($that, path, function () {
-					utils.avanceLoader($that, "stub", "copy", nbEtapes, true);
+					loader.update($that, "stub", "copy", nbEtapes, true);
 					// traitement de la copie des services stubbed dans l'ear des services
 					bat.copyStubbedService(infosDemarche, $that, function () {
-						utils.avanceLoader($that, "services-ear", "undeploy", nbEtapes, true);
+						loader.update($that, "services-ear", "undeploy", nbEtapes, true);
 						var pathEAR = path + "\\psl-services-ear";
 						// mvn wildfly:undeploy (ear)
 						bat.undeploy($that, pathEAR, function () {
-							utils.avanceLoader($that, "services-ear", "deploy", nbEtapes, true);
+							loader.update($that, "services-ear", "deploy", nbEtapes, true);
 							// mvn wildfly:deploy (ear)
 							bat.deploy($that, pathEAR, function () {
-								utils.avanceLoader($that, "services-war", "undeploy", nbEtapes, true);
+								loader.update($that, "services-war", "undeploy", nbEtapes, true);
 								var pathWAR = path + "\\psl-services-war";
 								// mvn wildfly:undeploy (war)
 								bat.undeploy($that, pathWAR, function () {
-									utils.avanceLoader($that, "services-war", "deploy", nbEtapes, true);
+									loader.update($that, "services-war", "deploy", nbEtapes, true);
 									// mvn wildfly:deploy (war)
 									bat.deploy($that, pathWAR, function () {
 										deployInfos.services = infosDemarche.versionServices;
@@ -698,9 +699,9 @@
 	 */
 	function framework(infosDemarche, $that, nbEtapes, callback) {
 		var path = utils.getFrameworkPath(infosDemarche);
-		utils.avanceLoader($that, "framework", "clean", nbEtapes, true);
+		loader.update($that, "framework", "clean", nbEtapes, true);
 		bat.clean($that, path, function () {
-			utils.avanceLoader($that, "framework", "install", nbEtapes, true);
+			loader.update($that, "framework", "install", nbEtapes, true);
 			bat.install($that, path, function () {
 				if ($.isFunction(callback)) {
 					callback();
@@ -782,16 +783,16 @@
 	function demarche(infosDemarche, $that, nbEtapes, callback) {
 		var path = infosDemarche.code;
 		// mvn clean
-		utils.avanceLoader($that, "demarche", "clean", nbEtapes, true);
+		loader.update($that, "demarche", "clean", nbEtapes, true);
 		bat.clean($that, path, function () {
-			utils.avanceLoader($that, "demarche", "install", nbEtapes, true);
+			loader.update($that, "demarche", "install", nbEtapes, true);
 			// mvn install
 			bat.install($that, path, function () {
-				utils.avanceLoader($that, "demarche", "undeploy", nbEtapes, true);
+				loader.update($that, "demarche", "undeploy", nbEtapes, true);
 				resetDonneesSpecifiques(infosDemarche, function () {
 					// mvn wildfly:undeploy
 					bat.undeploy($that, path, function () {
-						utils.avanceLoader($that, "demarche", "deploy", nbEtapes, true);
+						loader.update($that, "demarche", "deploy", nbEtapes, true);
 						// mvn wildfly:deploy
 						bat.deploy($that, path, function () {
 							if ($.inArray(infosDemarche.code, deployInfos.demarches) == -1) {
@@ -799,7 +800,7 @@
 								ui.drawDeployInfosDemarche(infosDemarche);
 							}
 							$that.parents("tr:first").removeClass("danger").addClass("success").find("details .infosDemarche-lastModified").data("lastModified", new Date());
-							ui.removeLoader($that.parents("tr:first"));
+							loader.remove($that.parents("tr:first"));
 							if ($.isFunction(callback)) {
 								callback();
 							}
@@ -822,10 +823,10 @@
 	function demarcheDeploySimple(infosDemarche, $that, nbEtapes, callback) {
 		var path = infosDemarche.code;
 		// mvn wildfly:undeploy
-		utils.avanceLoader($that, "demarche", "undeploy", nbEtapes, true);
+		loader.update($that, "demarche", "undeploy", nbEtapes, true);
 		resetDonneesSpecifiques(infosDemarche, function () {
 			bat.undeploy($that, path, function () {
-				utils.avanceLoader($that, "demarche", "deploy", nbEtapes, true);
+				loader.update($that, "demarche", "deploy", nbEtapes, true);
 				// mvn wildfly:deploy
 				bat.deploy($that, path, function () {
 					if ($.inArray(infosDemarche.code, deployInfos.demarches) == -1) {
@@ -833,7 +834,7 @@
 						ui.drawDeployInfosDemarche(infosDemarche);
 					}
 					$that.parents("tr:first").removeClass("danger").addClass("success").find("details .infosDemarche-lastModified").data("lastModified", new Date());
-					ui.removeLoader($that.parents("tr:first"));
+					loader.remove($that.parents("tr:first"));
 					if ($.isFunction(callback)) {
 						callback();
 					}
@@ -854,13 +855,13 @@
 	function demarcheBuildSimple(infosDemarche, $that, nbEtapes, callback) {
 		var path = infosDemarche.code;
 		// mvn clean
-		utils.avanceLoader($that, "demarche", "clean", nbEtapes, true);
+		loader.update($that, "demarche", "clean", nbEtapes, true);
 		bat.clean($that, path, function () {
-			utils.avanceLoader($that, "demarche", "install", nbEtapes, true);
+			loader.update($that, "demarche", "install", nbEtapes, true);
 			// mvn install
 			bat.install($that, path, function () {
 				$that.parents("tr:first").removeClass("danger").addClass("success");
-				ui.removeLoader($that.parents("tr:first"));
+				loader.remove($that.parents("tr:first"));
 				if ($.isFunction(callback)) {
 					callback();
 				}
@@ -879,7 +880,7 @@
 				infosDemarche = new DemarcheInfos(),
 				nbEtapes = 8;
 			if (data_demarche != null) {
-				ui.addLoader($that.parents("tr:first"));
+				loader.add($that.parents("tr:first"));
 				infosDemarche.code = data_demarche.dir;
 				infosDemarche.codeDemarche = data_demarche.code;
 				incrementEtape($that, true);
@@ -888,7 +889,7 @@
 					if (utils.isServicesMandatory() && utils.isStubbed() && infosDemarche.versionServices != deployInfos.services) {
 						nbEtapes = 19;
 					}
-					utils.avanceLoader($that, "demarche", "getInfos", nbEtapes, false);
+					loader.update($that, "demarche", "getInfos", nbEtapes, false);
 					// traitement des services stubbeds
 					stubbedService(infosDemarche, $that, nbEtapes, false, function () {
 						// traitement des services
@@ -910,13 +911,13 @@
 				infosDemarche = new DemarcheInfos(),
 				nbEtapes = 19;
 			if (data_demarche != null) {
-				ui.addLoader($that.parents("tr:first"));
+				loader.add($that.parents("tr:first"));
 				infosDemarche.code = data_demarche.dir;
 				infosDemarche.codeDemarche = data_demarche.code;
 				incrementEtape($that, true);
 				// récupération des informations du POM de la démarche
 				bat.getInfosPOM(infosDemarche, $that, function () {
-					utils.avanceLoader($that, "demarche", "getInfos", nbEtapes, false);
+					loader.update($that, "demarche", "getInfos", nbEtapes, false);
 					// traitement des services stubbeds
 					stubbedService(infosDemarche, $that, true, nbEtapes, function () {
 						// traitement des services
@@ -938,13 +939,13 @@
 				infosDemarche = new DemarcheInfos(),
 				nbEtapes = 3;
 			if (data_demarche != null) {
-				ui.addLoader($that.parents("tr:first"));
+				loader.add($that.parents("tr:first"));
 				infosDemarche.code = data_demarche.dir;
 				infosDemarche.codeDemarche = data_demarche.code;
 				incrementEtape($that, true);
 				// récupération des informations du POM de la démarche
 				bat.getInfosPOM(infosDemarche, $that, function () {
-					utils.avanceLoader($that, "demarche", "getInfos", nbEtapes, false);
+					loader.update($that, "demarche", "getInfos", nbEtapes, false);
 					// traitement de la démarche
 					demarcheDeploySimple(infosDemarche, $that, nbEtapes, null);
 				});
@@ -957,13 +958,13 @@
 				infosDemarche = new DemarcheInfos(),
 				nbEtapes = 6;
 			if (data_demarche != null) {
-				ui.addLoader($that.parents("tr:first"));
+				loader.add($that.parents("tr:first"));
 				infosDemarche.code = data_demarche.dir;
 				infosDemarche.codeDemarche = data_demarche.code;
 				incrementEtape($that, true);
 				// récupération des informations du POM de la démarche
 				bat.getInfosPOM(infosDemarche, $that, function () {
-					utils.avanceLoader($that, "demarche", "getInfos", nbEtapes, false);
+					loader.update($that, "demarche", "getInfos", nbEtapes, false);
 					// traitement du framework
 					framework(infosDemarche, $that, nbEtapes, function () {
 						// traitement de la démarche
@@ -1018,7 +1019,7 @@
 			setTimeout(function () {
 				$(".loader").each(function () {
 					var $cible = $(this).data("cible");
-					ui.modifyLoader($cible);
+					loader.reset($cible);
 				});
 			}, 10);
 		});
@@ -1026,8 +1027,8 @@
 			$(".loader").each(function () {
 				var $cible = $(this).data("cible");
 				if ($cible != null) {
-					ui.removeLoader($cible);
-					ui.addLoader($cible);
+					loader.remove($cible);
+					loader.add($cible);
 				}
 			});
 		});
