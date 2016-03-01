@@ -6,9 +6,10 @@ EVO003 - Ajouter un chargement des éléments déployés sur le serveur à l'ini
 EVO004 - Ajouter un message d'erreur si le Framework SNAPSHOT n'est pas de la version attendue
 EVO005 - Ajouter un message d'erreur si les services SNAPSHOT ne sont pas de la version attendue
 
+
 Anomalies
 ---------------------------------------
-
+ERR02 - Le services stub n'est pas réinjecté dans l'ear lorsque les services ont déjà été déployé une fois (même en stubbé)
 
 
 
@@ -17,3 +18,6 @@ Releases Notes
 0.2.4
 EVO006 - Ajouter l'heure du dernier déploiement
 ERR01 - Gérer les versions Release du Framework
+
+0.2.5
+EVO007 - Empêcher le lancement d'une action sur une démarche en cours.

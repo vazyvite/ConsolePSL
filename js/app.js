@@ -190,6 +190,7 @@
 						}).appendTo("body");
 					$("<span>").addClass("loader-etape").text("").appendTo($loader);
 					$cible.data("loader", id);
+					$cible.find(".btn-group button").attr("disabled", "disabled");
 				}
 			},
 
@@ -218,6 +219,7 @@
 					var loader = $("#" + $cible.data("loader"));
 					loader.remove();
 					$cible.data("loader", null);
+					$cible.find(".btn-group button").attr("disabled", false);
 				}
 			}
 		},
