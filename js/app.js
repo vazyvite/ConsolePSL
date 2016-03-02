@@ -895,7 +895,7 @@
 			var $that = $(this),
 				data_demarche = $that.parents("tr:first").data("demarche"),
 				infosDemarche = new DemarcheInfos(),
-				nbEtapes = 8;
+				nbEtapes = 9;
 			if (data_demarche != null) {
 				loader.add($that.parents("tr:first"));
 				infosDemarche.code = data_demarche.dir;
@@ -1024,10 +1024,10 @@
 						dateDay = new Date(dateLastModified.getFullYear(), dateLastModified.getMonth(), dateLastModified.getDate());
 						if (todayDay.getTime() == dateDay.getTime()) {
 							// c'est aujourd'hui, on affiche l'heure
-							stringDateLastModified = dateLastModified.getHours() + ":" + dateLastModified.getMinutes();
+							stringDateLastModified = dateLastModified.getHours() + ":" + (((dateLastModified.getMinutes() + 1) < 10) ? "0" : "");
 						} else {
 							// on affiche la date
-							stringDateLastModified = dateDay.getDate() + "/" + (((dateDay.getMonth() + 1) < 10) ? "0" : "") + (dateDay.getMonth() + 1) + "/" + dateDay.getFullYear();
+							stringDateLastModified = (((dateDay.getDate() + 1) < 10) ? "0" : "") + "/" + (((dateDay.getMonth() + 1) < 10) ? "0" : "") + (dateDay.getMonth() + 1) + "/" + dateDay.getFullYear();
 						}
 					}
 					$that.parents("tr:first").find("details .infosDemarche-lastModified").text(stringDateLastModified);
