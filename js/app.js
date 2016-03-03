@@ -634,7 +634,7 @@
 	function stubbedService(infosDemarche, $that, isForced, nbEtapes, callback) {
 		if (isForced || (utils.isServicesMandatory() && utils.isStubbed() && utils.getVersionServices(infosDemarche) != deployInfos.services)) {
 			var path = app.settings.dir.stub + "\\psl-teledossier-service-stubbed-ejb";
-			loader.update($that, "stub", "create", nbEtapes, true);
+			loader.update($that, "stub", "init", nbEtapes, true);
 			bat.modifyStubbedPom(infosDemarche, $that, path, function () {
 				loader.update($that, "stub", "clean", nbEtapes, true);
 				bat.clean($that, path, function () {
@@ -995,6 +995,16 @@
 			var $that = $(this),
 				logs = $that.parents("tr:first").data("logs") || "";
 			$("#modalLogs").data("cible", $that.parents("tr:first")).modal("show");
+			// mise en style des logs
+			logs = logs.replace(/^((?:\[ERROR\]|Caused by|\tat|\t\.{3}).*)$/gim, function (find) {
+				return "<span class='log-error'>" + find + "</span>";
+			});
+			logs = logs.replace(/^(\[INFO\].*)$/gim, function (find) {
+				return "<span class='log-info'>" + find + "</span>";
+			});
+			logs = logs.replace(/^(\[WARNING\].*)$/gim, function (find) {
+				return "<span class='log-warning'>" + find + "</span>";
+			});
 			$("#modalLogs").find(".modal-body").html(logs);
 			$("#modalLogs").modal("show");
 		}).on("click", "#cleanLogs", function () {

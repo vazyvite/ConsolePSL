@@ -1,6 +1,6 @@
 {
 	"name": "Console PSL",
-	"version": "0.2.5",
+	"version": "0.2.6",
 	"description": "Console de déploiement PSL",
 	"author": "Jonathan JACQUES <jonathan.jacques@capgemini.com>",
 	"main": "index.html",

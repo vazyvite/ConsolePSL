@@ -178,4 +178,16 @@ td details .container {
 .popover {
   width: 200px; }
 
+/* line 2, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_logs.scss */
+#modalLogs .log-info {
+  color: #4D96D2; }
+
+/* line 5, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_logs.scss */
+#modalLogs .log-error {
+  color: #FF2700; }
+
+/* line 8, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_logs.scss */
+#modalLogs .log-warning {
+  color: #D76500; }
+
 /*# sourceMappingURL=style.css.map */

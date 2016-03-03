@@ -10,6 +10,7 @@ EVO005 - Ajouter un message d'erreur si les services SNAPSHOT ne sont pas de la 
 Anomalies
 ---------------------------------------
 ERR02 - Le services stub n'est pas réinjecté dans l'ear lorsque les services ont déjà été déployé une fois (même en stubbé)
+ERR03 - Les loaders ne suivent pas les lignes de démarches lors du scroll
 
 
 
@@ -22,3 +23,6 @@ ERR01 - Gérer les versions Release du Framework
 0.2.5
 EVO007 - Empêcher le lancement d'une action sur une démarche en cours.
 EVO008 - Ajouter un signe spécifique pour la version des services Stubbés pour forcer le redéploiement des services classiques en version non stubbé lorsque c'est nécessaire.
+
+0.2.6
+EVO009 - Ajouter un code couleur pour les logs en fonction des tags [INFO, ERROR, WARNING...]
