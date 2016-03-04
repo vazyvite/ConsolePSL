@@ -429,8 +429,8 @@
 			 * @param {string} path  le chemin du projet à déployer
 			 * @callback callback
 			 */
-			deploy: function ($that, path, callback) {
-				require('child_process').exec('cmd /c mvn-deploy.bat "' + path + '"', {
+			deploy: function ($that, path, isEar, callback) {
+				require('child_process').exec('cmd /c mvn-deploy.bat "' + path + '" ' + isEar, {
 					cwd: DIR_BATCH,
 					maxBuffer: 1024 * 500
 				}, function (err, stdout, stderr) {
@@ -682,14 +682,15 @@
 						bat.undeploy($that, pathEAR, function () {
 							loader.update($that, "services-ear", "deploy", nbEtapes, true);
 							// mvn wildfly:deploy (ear)
-							bat.deploy($that, pathEAR, function () {
+							var isEARStubbed = (utils.isStubbed()) ? true : false;
+							bat.deploy($that, pathEAR, isEARStubbed, function () {
 								loader.update($that, "services-war", "undeploy", nbEtapes, true);
 								var pathWAR = path + "\\psl-services-war";
 								// mvn wildfly:undeploy (war)
 								bat.undeploy($that, pathWAR, function () {
 									loader.update($that, "services-war", "deploy", nbEtapes, true);
 									// mvn wildfly:deploy (war)
-									bat.deploy($that, pathWAR, function () {
+									bat.deploy($that, pathWAR, false, function () {
 										deployInfos.services = utils.getVersionServices(infosDemarche);
 										$("#deploy-info-services").text(deployInfos.services);
 										if ($.isFunction(callback)) {
@@ -811,7 +812,7 @@
 					bat.undeploy($that, path, function () {
 						loader.update($that, "demarche", "deploy", nbEtapes, true);
 						// mvn wildfly:deploy
-						bat.deploy($that, path, function () {
+						bat.deploy($that, path, false, function () {
 							if ($.inArray(infosDemarche.code, deployInfos.demarches) == -1) {
 								deployInfos.demarches.push(infosDemarche.code);
 								ui.drawDeployInfosDemarche(infosDemarche);
@@ -845,7 +846,7 @@
 			bat.undeploy($that, path, function () {
 				loader.update($that, "demarche", "deploy", nbEtapes, true);
 				// mvn wildfly:deploy
-				bat.deploy($that, path, function () {
+				bat.deploy($that, path, false, function () {
 					if ($.inArray(infosDemarche.code, deployInfos.demarches) == -1) {
 						deployInfos.demarches.push(infosDemarche.code);
 						ui.drawDeployInfosDemarche(infosDemarche);

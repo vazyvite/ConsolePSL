@@ -29,10 +29,3 @@ echo.
 cd /D D:\
 cd "%root%%pathServices%\psl-services-ear\target"
 "C:\Program Files\7-Zip\7z.exe" a -tzip psl-services-ear.ear *.jar
-
-echo.
-echo +--------------------------------+
-echo *    Supprime Services Stubbed   *
-echo +--------------------------------+
-echo.
-del psl-teledossier-service-ejb.jar
