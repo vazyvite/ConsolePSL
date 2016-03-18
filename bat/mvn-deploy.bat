@@ -19,5 +19,5 @@ call mvn wildfly:deploy -e
 goto :EOF
 
 :deploy_service
-call mvn wildfly:deploy -e -beforeDeployment "C:\Program Files\7-Zip\7z.exe" a -tzip target\psl-services-ear.ear *.jar
+%JBOSS_HOME%\bin\jboss-cli.bat --connect --command="deploy --force target\psl-services-ear.ear"
 goto :EOF
