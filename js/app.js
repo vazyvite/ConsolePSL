@@ -1035,7 +1035,7 @@
 						dateDay = new Date(dateLastModified.getFullYear(), dateLastModified.getMonth(), dateLastModified.getDate());
 						if (todayDay.getTime() == dateDay.getTime()) {
 							// c'est aujourd'hui, on affiche l'heure
-							stringDateLastModified = dateLastModified.getHours() + ":" + (((dateLastModified.getMinutes() + 1) < 10) ? "0" : "");
+							stringDateLastModified = dateLastModified.getHours() + ":" + (((dateLastModified.getMinutes()) < 10) ? "0" : "") + dateLastModified.getMinutes();
 						} else {
 							// on affiche la date
 							stringDateLastModified = (((dateDay.getDate() + 1) < 10) ? "0" : "") + "/" + (((dateDay.getMonth() + 1) < 10) ? "0" : "") + (dateDay.getMonth() + 1) + "/" + dateDay.getFullYear();
