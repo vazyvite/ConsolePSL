@@ -1,16 +1,20 @@
 Evolutions
 ---------------------------------------
-EVO001 - Faire en sorte d'afficher les logs de manière plus ordonnée.
-EVO002 - Faire en sorte que les logs s'incrémentent plutôt qu'ils ne s'écrasent.
 EVO003 - Ajouter un chargement des éléments déployés sur le serveur à l'initialisation de l'application
 EVO004 - Ajouter un message d'erreur si le Framework SNAPSHOT n'est pas de la version attendue
 EVO005 - Ajouter un message d'erreur si les services SNAPSHOT ne sont pas de la version attendue
+EVO006 - Ajouter un message d'erreur si les services RELEASE ne sont pas présents dans le répertoire
 
 
 Anomalies
 ---------------------------------------
 ERR03 - Les loaders ne suivent pas les lignes de démarches lors du scroll
 
+
+Annulés
+---------------------------------------
+EVO001 - Faire en sorte d'afficher les logs de manière plus ordonnée.
+EVO002 - Faire en sorte que les logs s'incrémentent plutôt qu'ils ne s'écrasent.
 
 
 Releases Notes
@@ -26,3 +30,6 @@ EVO008 - Ajouter un signe spécifique pour la version des services Stubbés pour
 0.2.6
 EVO009 - Ajouter un code couleur pour les logs en fonction des tags [INFO, ERROR, WARNING...]
 ERR02 - Le services stub n'est pas réinjecté dans l'ear lorsque les services ont déjà été déployé une fois (même en stubbé)
+
+0.2.7
+ERR07 - Les déploiements des services Stubbés tournent en bouclent
