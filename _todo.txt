@@ -9,6 +9,7 @@ EVO006 - Ajouter un message d'erreur si les services RELEASE ne sont pas présen
 Anomalies
 ---------------------------------------
 ERR03 - Les loaders ne suivent pas les lignes de démarches lors du scroll
+ERR08 - Les loaders dépassent de la fenêtre en déploiement complet
 
 
 Annulés
