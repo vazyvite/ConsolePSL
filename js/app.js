@@ -1,5 +1,5 @@
 /*jslint eqeq: true, plusplus: true, indent: 4*/
-/*globals app, require, jQuery, console, alert*/
+/*globals app, require, jQuery, console, alert, Notification*/
 
 (function ($) {
 	'use strict';
@@ -131,9 +131,9 @@
 					elementListe = null;
 				$("<summary>").text(demarche.name).appendTo($infosDemarche);
 				$contentInfosDemarche = $("<div>").addClass("container").appendTo($infosDemarche);
-				ui.createFormGroupStatic("version services : ", "", demarche.name, "infosDemarche-vServices").appendTo($contentInfosDemarche);
-				ui.createFormGroupStatic("version framework : ", "", demarche.name, "infosDemarche-vFramework").appendTo($contentInfosDemarche);
-				ui.createFormGroupStatic("dernier déploiement : ", "", "", "infosDemarche-lastModified").appendTo($contentInfosDemarche);
+				ui.createFormGroupStatic("version services : ", "", demarche.name, "infosDemarche-vServices", null).appendTo($contentInfosDemarche);
+				ui.createFormGroupStatic("version framework : ", "", demarche.name, "infosDemarche-vFramework", null).appendTo($contentInfosDemarche);
+				ui.createFormGroupStatic("dernier déploiement : ", "", "", "infosDemarche-lastModified", "glyphicon-time").appendTo($contentInfosDemarche);
 				$cel1.appendTo($ligne);
 				ui.creerActionsDropDown(idDemarche, demarche).appendTo($cel2);
 				$("<button>").attr({
@@ -151,13 +151,17 @@
 			 * @param   {string} text      le texte
 			 * @param   {string} id        l'identifiant du champ
 			 * @param   {string} className la classe associée au champ
+			 * @param   {string} icon	   l'icone associée au champ
 			 * @returns {object} l'objet form-group-static
 			 */
-			createFormGroupStatic: function (label, text, id, className) {
+			createFormGroupStatic: function (label, text, id, className, icon) {
 				var $formGroup = $("<div>").addClass("form-group row"),
 					$groupField = $("<div>").addClass("col-xs-6");
 				$("<label>").addClass("control-label col-xs-6").text(label).attr("for", "input_" + id).appendTo($formGroup);
 				$groupField.appendTo($formGroup);
+				if (icon != null) {
+					$("<span>").addClass("glyphicon " + icon).appendTo($groupField);
+				}
 				$("<span>").addClass("form-control-static " + className).text(text).appendTo($groupField);
 				return $formGroup;
 			},
@@ -632,7 +636,7 @@
 	 * @callback callback
 	 */
 	function stubbedService(infosDemarche, $that, isForced, nbEtapes, callback) {
-		if (isForced || (utils.isServicesMandatory() && utils.isStubbed() && utils.getVersionServices(infosDemarche) != deployInfos.services)) {
+		if (utils.isStubbed() && (isForced || (utils.isServicesMandatory() && utils.getVersionServices(infosDemarche) != deployInfos.services))) {
 			var path = app.settings.dir.stub + "\\psl-teledossier-service-stubbed-ejb";
 			loader.update($that, "stub", "init", nbEtapes, true);
 			bat.modifyStubbedPom(infosDemarche, $that, path, function () {
@@ -915,7 +919,9 @@
 							// traitement du framework
 							framework(infosDemarche, $that, nbEtapes, function () {
 								// traitement de la démarche
-								demarche(infosDemarche, $that, nbEtapes, null);
+								demarche(infosDemarche, $that, nbEtapes, function () {
+									new Notification("Fin du déploiement de la démarche " + infosDemarche.code);
+								});
 							});
 						});
 					});
@@ -943,7 +949,9 @@
 							// traitement du framework
 							framework(infosDemarche, $that, nbEtapes, function () {
 								// traitement de la démarche
-								demarche(infosDemarche, $that, nbEtapes, null);
+								demarche(infosDemarche, $that, nbEtapes, function () {
+									new Notification("Fin du déploiement de la démarche " + infosDemarche.code);
+								});
 							});
 						});
 					});
@@ -965,7 +973,9 @@
 				bat.getInfosPOM(infosDemarche, $that, function () {
 					loader.update($that, "demarche", "getInfos", nbEtapes, false);
 					// traitement de la démarche
-					demarcheDeploySimple(infosDemarche, $that, nbEtapes, null);
+					demarcheDeploySimple(infosDemarche, $that, nbEtapes, function () {
+						new Notification("Fin du déploiement de la démarche " + infosDemarche.code);
+					});
 				});
 			} else {
 				alert("La démarche n'existe pas");
@@ -986,7 +996,9 @@
 					// traitement du framework
 					framework(infosDemarche, $that, nbEtapes, function () {
 						// traitement de la démarche
-						demarcheBuildSimple(infosDemarche, $that, nbEtapes, null);
+						demarcheBuildSimple(infosDemarche, $that, nbEtapes, function () {
+							new Notification("Fin du déploiement de la démarche " + infosDemarche.code);
+						});
 					});
 				});
 			} else {
