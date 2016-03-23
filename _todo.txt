@@ -1,4 +1,4 @@
-Evolutions(011)
+Evolutions(012)
 ---------------------------------------
 EVO003 - Ajouter un chargement des éléments déployés sur le serveur à l'initialisation de l'application
 EVO004 - Ajouter un message d'erreur si le Framework SNAPSHOT n'est pas de la version attendue
@@ -8,8 +8,7 @@ EVO006 - Ajouter un message d'erreur si les services RELEASE ne sont pas présen
 
 Anomalies(010)
 ---------------------------------------
-ERR03 - Les loaders ne suivent pas les lignes de démarches lors du scroll
-ERR08 - Les loaders dépassent de la fenêtre en déploiement complet
+
 
 
 Annulés
@@ -39,3 +38,9 @@ ERR07 - Les déploiements des services Stubbés tournent en bouclent
 EVO010 - Ajouter une notification lors de la fin d'un traitement de déploiement
 ERR009 - Les services stubs sont systématiquement cleanés et buildés
 Modification de l'affichage des éléments déployés.
+
+0.2.9
+EVO011 - Emettre une notification en cas d'erreur.
+ERR08 - Les loaders dépassent de la fenêtre en déploiement complet
+ERR03 - Les loaders ne suivent pas les lignes de démarches lors du scroll
+Ajout d'une infobulle d'explication sur l'option "Stub"

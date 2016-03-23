@@ -253,6 +253,18 @@
 					loader.find(".loader-etape").text(scenario + "-" + step);
 					progressbar.css("width", (pasAvancement * etape) + "%");
 				}
+			},
+
+			/**
+			 * Réinitialisation de tous les loaders.
+			 */
+			resetAll: function () {
+				$(".loader").each(function () {
+					var $cible = $(this).data("cible");
+					if ($cible != null) {
+						loader.reset($cible);
+					}
+				});
 			}
 		},
 		utils = {
@@ -320,9 +332,10 @@
 			 * @param {object} $that  l'objet sur lequel l'erreur a eu lieu
 			 * @param {string} stdout les logs d'erreur
 			 */
-			createErreur: function ($that, log) {
+			createErreur: function ($that, log, infosDemarche) {
 				$that.parents("tr:first").data("logs", $that.data("logs") + "\n" + log).removeClass("success").addClass("danger");
 				loader.remove($that.parents("tr:first"));
+				new Notification("Echec du déploiement de la démarche.");
 			},
 
 			/**
@@ -362,6 +375,35 @@
 					path = (utils.isBranche(infosDemarche.versionFramework)) ? app.settings.dir.versionServices + "\\psl-services-" + infosDemarche.versionFramework + "\\psl-demarche-framework" : app.settings.dir.trunkframework + "\\tags\\psl-demarche-framework-" + infosDemarche.versionFramework;
 				}
 				return path;
+			},
+
+			/**
+			 * Calcul le nombre d'étapes nécessaires pour un scénario.
+			 * @param   {object}  deployInfos       les informations de déploiement
+			 * @param   {number}  base              le nombre d'étapes de base
+			 * @param   {boolean} servicesMandatory indique si les services sont requis
+			 * @returns {number}  le nombre d'étapes
+			 */
+			calculerEtapes: function (deployInfos, nbEtapesBase, servicesMandatory) {
+				if (isNaN(nbEtapesBase)) {
+					nbEtapesBase = 0;
+				}
+				var nbEtapes = nbEtapesBase;
+				// si les services sont requis
+				if (servicesMandatory || (utils.isServicesMandatory() && utils.getVersionServices(deployInfos) != deployInfos.services)) {
+					nbEtapes += 7;
+					// si les services stubbés sont requis
+					if (utils.isStubbed()) {
+						nbEtapes += 3;
+					}
+				}
+				// si la réinitialisation des données spécifiques sont requises
+				if (utils.isResetDonneesSpecifiques()) {
+					nbEtapes += 1;
+				}
+				// on ajoute toujours 1 au nombre d'étapes.
+				nbEtapes += 1;
+				return nbEtapes;
 			}
 		},
 		bat = {
@@ -480,10 +522,11 @@
 			 * @param {object} $that         l'objet source
 			 * @callback callback
 			 */
-			copyStubbedService: function (infosDemarche, $that, callback) {
+			copyStubbedService: function (infosDemarche, $that, nbEtapes, callback) {
 				var path = app.settings.dir.stub + "\\psl-teledossier-service-stubbed-ejb",
 					pathService = utils.getServicesPath(infosDemarche);
 				if (utils.isStubbed()) {
+					loader.update($that, "services", "insert-stub", nbEtapes, true);
 					require('child_process').exec('cmd /c copyStubbed.bat "' + path + '" "' + pathService + '" "' + infosDemarche.versionServices + '"', {
 						cwd: DIR_BATCH
 					}, function (err, stdout, stderr) {
@@ -642,8 +685,8 @@
 			bat.modifyStubbedPom(infosDemarche, $that, path, function () {
 				loader.update($that, "stub", "clean", nbEtapes, true);
 				bat.clean($that, path, function () {
+					loader.update($that, "stub", "install", nbEtapes);
 					bat.install($that, path, function () {
-						loader.update($that, "stub", "install", nbEtapes);
 						if ($.isFunction(callback)) {
 							callback();
 						}
@@ -677,9 +720,8 @@
 				loader.update($that, "services", "install", nbEtapes, true);
 				// mvn install
 				bat.install($that, path, function () {
-					loader.update($that, "stub", "copy", nbEtapes, true);
 					// traitement de la copie des services stubbed dans l'ear des services
-					bat.copyStubbedService(infosDemarche, $that, function () {
+					bat.copyStubbedService(infosDemarche, $that, nbEtapes, function () {
 						loader.update($that, "services-ear", "undeploy", nbEtapes, true);
 						var pathEAR = path + "\\psl-services-ear";
 						// mvn wildfly:undeploy (ear)
@@ -772,8 +814,9 @@
 //		});
 	}
 
-	function resetDonneesSpecifiques(infosDemarche, callback) {
+	function resetDonneesSpecifiques($that, nbEtapes, infosDemarche, callback) {
 		if (utils.isResetDonneesSpecifiques()) {
+			loader.update($that, "demarche", "reset-data", nbEtapes, true);
 			var pg = require('pg'),
 				username = app.settings.pg.username,
 				password = app.settings.pg.password,
@@ -810,9 +853,9 @@
 			loader.update($that, "demarche", "install", nbEtapes, true);
 			// mvn install
 			bat.install($that, path, function () {
-				loader.update($that, "demarche", "undeploy", nbEtapes, true);
-				resetDonneesSpecifiques(infosDemarche, function () {
+				resetDonneesSpecifiques($that, nbEtapes, infosDemarche, function () {
 					// mvn wildfly:undeploy
+					loader.update($that, "demarche", "undeploy", nbEtapes, true);
 					bat.undeploy($that, path, function () {
 						loader.update($that, "demarche", "deploy", nbEtapes, true);
 						// mvn wildfly:deploy
@@ -845,8 +888,8 @@
 	function demarcheDeploySimple(infosDemarche, $that, nbEtapes, callback) {
 		var path = infosDemarche.code;
 		// mvn wildfly:undeploy
-		loader.update($that, "demarche", "undeploy", nbEtapes, true);
-		resetDonneesSpecifiques(infosDemarche, function () {
+		resetDonneesSpecifiques($that, nbEtapes, infosDemarche, function () {
+			loader.update($that, "demarche", "undeploy", nbEtapes, true);
 			bat.undeploy($that, path, function () {
 				loader.update($that, "demarche", "deploy", nbEtapes, true);
 				// mvn wildfly:deploy
@@ -900,7 +943,7 @@
 			var $that = $(this),
 				data_demarche = $that.parents("tr:first").data("demarche"),
 				infosDemarche = new DemarcheInfos(),
-				nbEtapes = 9;
+				nbEtapes = 7;
 			if (data_demarche != null) {
 				loader.add($that.parents("tr:first"));
 				infosDemarche.code = data_demarche.dir;
@@ -908,9 +951,7 @@
 				incrementEtape($that, true);
 				// récupération des informations du POM de la démarche
 				bat.getInfosPOM(infosDemarche, $that, function () {
-					if (utils.isServicesMandatory() && utils.isStubbed() && utils.getVersionServices(infosDemarche) != deployInfos.services) {
-						nbEtapes = 19;
-					}
+					nbEtapes = utils.calculerEtapes(infosDemarche, nbEtapes, false);
 					loader.update($that, "demarche", "getInfos", nbEtapes, false);
 					// traitement des services stubbeds
 					stubbedService(infosDemarche, $that, nbEtapes, false, function () {
@@ -933,7 +974,7 @@
 			var $that = $(this),
 				data_demarche = $that.parents("tr:first").data("demarche"),
 				infosDemarche = new DemarcheInfos(),
-				nbEtapes = 19;
+				nbEtapes = 7;
 			if (data_demarche != null) {
 				loader.add($that.parents("tr:first"));
 				infosDemarche.code = data_demarche.dir;
@@ -941,6 +982,7 @@
 				incrementEtape($that, true);
 				// récupération des informations du POM de la démarche
 				bat.getInfosPOM(infosDemarche, $that, function () {
+					nbEtapes = utils.calculerEtapes(infosDemarche, nbEtapes, true);
 					loader.update($that, "demarche", "getInfos", nbEtapes, false);
 					// traitement des services stubbeds
 					stubbedService(infosDemarche, $that, true, nbEtapes, function () {
@@ -1057,20 +1099,18 @@
 				});
 			}
 			setTimeout(function () {
-				$(".loader").each(function () {
-					var $cible = $(this).data("cible");
-					loader.reset($cible);
-				});
+				loader.resetAll();
 			}, 10);
 		});
+
+		// on fait suivre les loaders lors du resize de la page
 		$(document).on("resize", function () {
-			$(".loader").each(function () {
-				var $cible = $(this).data("cible");
-				if ($cible != null) {
-					loader.remove($cible);
-					loader.add($cible);
-				}
-			});
+			loader.resetAll();
+		});
+
+		// on fait suivre les loader lors du scroll
+		$("main").on("scroll", function () {
+			loader.resetAll();
 		});
 		$("#addDemarche").on('click', function () {
 			$("#modalAddDemarche :input").val("");
