@@ -332,10 +332,11 @@
 			 * @param {object} $that  l'objet sur lequel l'erreur a eu lieu
 			 * @param {string} stdout les logs d'erreur
 			 */
-			createErreur: function ($that, log, infosDemarche) {
-				$that.parents("tr:first").data("logs", $that.data("logs") + "\n" + log).removeClass("success").addClass("danger");
+			createErreur: function ($that, log, description, infosDemarche) {
+				var message = $that.data("logs") || "";
+				$that.parents("tr:first").data("logs", message + "\n" + log).removeClass("success").addClass("danger");
 				loader.remove($that.parents("tr:first"));
-				new Notification("Echec du déploiement de la démarche.");
+				new Notification("Echec", {body: (description) ? "Echec du déploiement de la démarche.\n" + description : "Echec du déploiement de la démarche."});
 			},
 
 			/**
@@ -384,13 +385,13 @@
 			 * @param   {boolean} servicesMandatory indique si les services sont requis
 			 * @returns {number}  le nombre d'étapes
 			 */
-			calculerEtapes: function (deployInfos, nbEtapesBase, servicesMandatory) {
+			calculerEtapes: function (infosDemarches, nbEtapesBase, servicesMandatory) {
 				if (isNaN(nbEtapesBase)) {
 					nbEtapesBase = 0;
 				}
 				var nbEtapes = nbEtapesBase;
 				// si les services sont requis
-				if (servicesMandatory || (utils.isServicesMandatory() && utils.getVersionServices(deployInfos) != deployInfos.services)) {
+				if (servicesMandatory || (utils.isServicesMandatory() && utils.getVersionServices(infosDemarches) != deployInfos.services)) {
 					nbEtapes += 7;
 					// si les services stubbés sont requis
 					if (utils.isStubbed()) {
@@ -418,7 +419,7 @@
 					cwd: DIR_BATCH
 				}, function (err, stdout, stderr) {
 					if (err) {
-						utils.createErreur($that, stdout);
+						utils.createErreur($that, stdout, null);
 					} else if ($.isFunction(callback)) {
 						utils.createLog($that, stdout);
 						callback();
@@ -438,7 +439,7 @@
 					maxBuffer: 1024 * 500
 				}, function (err, stdout, stderr) {
 					if (err) {
-						utils.createErreur($that, stdout);
+						utils.createErreur($that, stdout, null);
 					} else {
 						utils.createLog($that, stdout);
 						if ($.isFunction(callback)) {
@@ -459,7 +460,7 @@
 					cwd: DIR_BATCH
 				}, function (err, stdout, stderr) {
 					if (err) {
-						utils.createErreur($that, stdout);
+						utils.createErreur($that, stdout, null);
 					} else {
 						utils.createLog($that, stdout);
 						if ($.isFunction(callback)) {
@@ -481,7 +482,7 @@
 					maxBuffer: 1024 * 500
 				}, function (err, stdout, stderr) {
 					if (err) {
-						utils.createErreur($that, stdout);
+						utils.createErreur($that, stdout, null);
 					} else {
 						utils.createLog($that, stdout);
 						if ($.isFunction(callback)) {
@@ -502,12 +503,12 @@
 				var fs = require("fs");
 				fs.readFile(app.settings.workspace + "\\" + path + "\\pom.xml", "utf8", function (err, data) {
 					if (err) {
-						utils.createErreur($that, err);
+						utils.createErreur($that, err, null);
 					} else {
 						var result = data.replace(/<version>([0-9a-zA-Z\.\-]+)<\/version>/i, "<version>" + infosDemarche.versionServices + "<\/version>");
 						fs.writeFile(app.settings.workspace + "\\" + path + "\\pom.xml", result, 'utf8', function (err) {
 							if (err) {
-								utils.createErreur($that, err);
+								utils.createErreur($that, err, null);
 							} else if ($.isFunction(callback)) {
 								callback();
 							}
@@ -531,7 +532,7 @@
 						cwd: DIR_BATCH
 					}, function (err, stdout, stderr) {
 						if (err) {
-							utils.createErreur($that, stdout);
+							utils.createErreur($that, stdout, null);
 						} else {
 							utils.createLog($that, stdout);
 							if ($.isFunction(callback)) {
@@ -558,7 +559,7 @@
 						matchVersionServices = 0,
 						matchVersionFramework = 0;
 					if (err) {
-						utils.createErreur($that, err);
+						utils.createErreur($that, err, null);
 					} else {
 						matchVersionFramework = patternVersionFramework.exec(data);
 						matchVersionServices = patternVersionServices.exec(data);
@@ -629,6 +630,60 @@
 				if ($.isFunction(callback)) {
 					callback(json);
 				}
+			},
+
+			/**
+			 * Valide l'existance du pom d'un projet à la version requise.
+			 * @param   {boolean} isFramework   indique si le projet concerné est le Framework
+			 * @param   {object}  infosDemarche les informations de la démarche
+			 * @returns {boo}     indique si le pom existe à la bonne version
+			 */
+			valideExistancePom: function (isFramework, infosDemarche) {
+				var isExist = true,
+					path = (isFramework) ? utils.getFrameworkPath(infosDemarche) : utils.getServicesPath(infosDemarche),
+					version = (isFramework) ? infosDemarche.versionFramework : infosDemarche.versionServices,
+					fs = require("fs"),
+					data = null,
+					pattern = (isFramework) ? /<parent>\n(?:\t*<[a-zA-Z0-1]+>.*<\/[a-zA-Z0-1]+>\n)+\t*<version>([a-zA-Z0-9\.\-]+)<\/version>\n\t*<\/parent>/ig : /<version>([0-9a-zA-Z\.\-]+)<\/version>/ig,
+					versionDoc = null;
+				try {
+					if (utils.isSnapshot(version)) {
+						data = fs.readFileSync(app.settings.workspace + '\\' + path + '\\pom.xml', "utf-8");
+						versionDoc = pattern.exec(data);
+						if (versionDoc[1] != version) {
+							isExist = false;
+						}
+					} else {
+						fs.accessSync(app.settings.workspace + '\\' + path + '\\pom.xml', fs.F_OK);
+					}
+				} catch (e) {
+					isExist = false;
+				}
+				return isExist;
+			},
+
+			/**
+			 * valide le déroulement d'un scénario et validant que tous les services et framework existent bien sous la version requise.
+			 * @param   {object}  infosDemarche les informations sur la démarche
+			 * @param {boolean} indique       si les services sont requis dans le scénario
+			 * @returns {boolean} indique si le scénario est valide.
+			 */
+			valideScenario: function ($that, infosDemarche, servicesMandatory) {
+				var isScenarioValide = true,
+					message = "";
+				if (!bat.valideExistancePom(true, infosDemarche)) {
+					isScenarioValide = false;
+					message = (utils.isSnapshot(infosDemarche.versionFramework)) ? "La version " + infosDemarche.versionFramework + " du framework est obsolète." : "La version " + infosDemarche.versionFramework + " du framework n'existe pas dans votre répertoire.";
+					utils.createErreur($that, message, message, infosDemarche);
+				}
+				if (servicesMandatory || (utils.isServicesMandatory() && utils.getVersionServices(infosDemarche) != deployInfos.services)) {
+					if (!bat.valideExistancePom(false, infosDemarche)) {
+						isScenarioValide = false;
+						message = (utils.isSnapshot(infosDemarche.versionServices)) ? "La version " + infosDemarche.versionServices + " des services est obsolète." : "La version " + infosDemarche.versionServices + " des services n'existe pas dans votre répertoire.";
+						utils.createErreur($that, message, message, infosDemarche);
+					}
+				}
+				return isScenarioValide;
 			}
 		},
 		form = {
@@ -952,20 +1007,22 @@
 				// récupération des informations du POM de la démarche
 				bat.getInfosPOM(infosDemarche, $that, function () {
 					nbEtapes = utils.calculerEtapes(infosDemarche, nbEtapes, false);
-					loader.update($that, "demarche", "getInfos", nbEtapes, false);
-					// traitement des services stubbeds
-					stubbedService(infosDemarche, $that, nbEtapes, false, function () {
-						// traitement des services
-						services(infosDemarche, $that, false, nbEtapes, function () {
-							// traitement du framework
-							framework(infosDemarche, $that, nbEtapes, function () {
-								// traitement de la démarche
-								demarche(infosDemarche, $that, nbEtapes, function () {
-									new Notification("Fin du déploiement de la démarche " + infosDemarche.code);
+					if (bat.valideScenario($that, infosDemarche, false)) {
+						loader.update($that, "demarche", "getInfos", nbEtapes, false);
+						// traitement des services stubbeds
+						stubbedService(infosDemarche, $that, nbEtapes, false, function () {
+							// traitement des services
+							services(infosDemarche, $that, false, nbEtapes, function () {
+								// traitement du framework
+								framework(infosDemarche, $that, nbEtapes, function () {
+									// traitement de la démarche
+									demarche(infosDemarche, $that, nbEtapes, function () {
+										new Notification("Succès", {body: "Fin du déploiement de la démarche " + infosDemarche.code});
+									});
 								});
 							});
 						});
-					});
+					}
 				});
 			} else {
 				alert("La démarche n'existe pas");
@@ -983,20 +1040,22 @@
 				// récupération des informations du POM de la démarche
 				bat.getInfosPOM(infosDemarche, $that, function () {
 					nbEtapes = utils.calculerEtapes(infosDemarche, nbEtapes, true);
-					loader.update($that, "demarche", "getInfos", nbEtapes, false);
-					// traitement des services stubbeds
-					stubbedService(infosDemarche, $that, true, nbEtapes, function () {
-						// traitement des services
-						services(infosDemarche, $that, true, nbEtapes, function () {
-							// traitement du framework
-							framework(infosDemarche, $that, nbEtapes, function () {
-								// traitement de la démarche
-								demarche(infosDemarche, $that, nbEtapes, function () {
-									new Notification("Fin du déploiement de la démarche " + infosDemarche.code);
+					if (bat.valideScenario($that, infosDemarche, true)) {
+						loader.update($that, "demarche", "getInfos", nbEtapes, false);
+						// traitement des services stubbeds
+						stubbedService(infosDemarche, $that, true, nbEtapes, function () {
+							// traitement des services
+							services(infosDemarche, $that, true, nbEtapes, function () {
+								// traitement du framework
+								framework(infosDemarche, $that, nbEtapes, function () {
+									// traitement de la démarche
+									demarche(infosDemarche, $that, nbEtapes, function () {
+										new Notification("Succès", {body: "Fin du déploiement de la démarche " + infosDemarche.code});
+									});
 								});
 							});
 						});
-					});
+					}
 				});
 			} else {
 				alert("La démarche n'existe pas");
@@ -1016,7 +1075,7 @@
 					loader.update($that, "demarche", "getInfos", nbEtapes, false);
 					// traitement de la démarche
 					demarcheDeploySimple(infosDemarche, $that, nbEtapes, function () {
-						new Notification("Fin du déploiement de la démarche " + infosDemarche.code);
+						new Notification("Succès", {body: "Fin du déploiement de la démarche " + infosDemarche.code});
 					});
 				});
 			} else {
@@ -1034,14 +1093,16 @@
 				incrementEtape($that, true);
 				// récupération des informations du POM de la démarche
 				bat.getInfosPOM(infosDemarche, $that, function () {
-					loader.update($that, "demarche", "getInfos", nbEtapes, false);
-					// traitement du framework
-					framework(infosDemarche, $that, nbEtapes, function () {
-						// traitement de la démarche
-						demarcheBuildSimple(infosDemarche, $that, nbEtapes, function () {
-							new Notification("Fin du déploiement de la démarche " + infosDemarche.code);
+					if (bat.valideScenario($that, infosDemarche, true)) {
+						loader.update($that, "demarche", "getInfos", nbEtapes, false);
+						// traitement du framework
+						framework(infosDemarche, $that, nbEtapes, function () {
+							// traitement de la démarche
+							demarcheBuildSimple(infosDemarche, $that, nbEtapes, function () {
+								new Notification("Succès", {body: "Fin du déploiement de la démarche " + infosDemarche.code});
+							});
 						});
-					});
+					}
 				});
 			} else {
 				alert("La démarche n'existe pas");

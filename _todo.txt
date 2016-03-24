@@ -1,9 +1,6 @@
 Evolutions(012)
 ---------------------------------------
 EVO003 - Ajouter un chargement des éléments déployés sur le serveur à l'initialisation de l'application
-EVO004 - Ajouter un message d'erreur si le Framework SNAPSHOT n'est pas de la version attendue
-EVO005 - Ajouter un message d'erreur si les services SNAPSHOT ne sont pas de la version attendue
-EVO006 - Ajouter un message d'erreur si les services RELEASE ne sont pas présents dans le répertoire
 
 
 Anomalies(010)
@@ -44,3 +41,9 @@ EVO011 - Emettre une notification en cas d'erreur.
 ERR08 - Les loaders dépassent de la fenêtre en déploiement complet
 ERR03 - Les loaders ne suivent pas les lignes de démarches lors du scroll
 Ajout d'une infobulle d'explication sur l'option "Stub"
+
+0.2.10
+EVO004 - Ajouter un message d'erreur si le Framework SNAPSHOT n'est pas de la version attendue
+EVO005 - Ajouter un message d'erreur si les services SNAPSHOT ne sont pas de la version attendue
+EVO006 - Ajouter un message d'erreur si les services RELEASE ne sont pas présents dans le répertoire
+Amélioration de la gestion des notifications.
