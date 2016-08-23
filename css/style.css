@@ -18,7 +18,18 @@
   /*font-family: Roboto;*/
   font-family: Arial; }
 
-/* line 11, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_global.scss */
+/* line 6, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_global.scss */
+body {
+  overflow-x: hidden; }
+
+/* line 10, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_global.scss */
+main {
+  position: relative;
+  z-index: 1;
+  max-height: 955px;
+  overflow-y: auto; }
+
+/* line 22, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_global.scss */
 h1,
 h2,
 h3,
@@ -28,19 +39,19 @@ h6 {
   color: #4D96D2;
   font-family: Roboto-thin; }
 
-/* line 15, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_global.scss */
+/* line 26, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_global.scss */
 h2 {
   border-bottom: 1px dashed #4D96D2;
   margin-bottom: 30px; }
 
-/* line 19, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_global.scss */
+/* line 30, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_global.scss */
 h3 {
   margin-top: 0; }
 
-/* line 23, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_global.scss */
+/* line 34, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_global.scss */
 summary {
   cursor: pointer; }
-  /* line 25, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_global.scss */
+  /* line 36, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_global.scss */
   summary h1, summary h2, summary h3, summary h4, summary h5, summary h6 {
     display: inline-block; }
 
@@ -80,24 +91,41 @@ summary {
 /* line 1, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_header.scss */
 header {
   position: relative;
-  z-index: 2; }
-  /* line 4, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_header.scss */
+  z-index: 2;
+  padding: 7px 35px 10px 35px;
+  box-shadow: 0 0px 10px 1px rgba(0, 0, 0, 0.4); }
+  /* line 6, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_header.scss */
   header h1 {
-    padding: 7px 35px 10px 35px;
     margin-top: 0;
-    margin-bottom: 0;
-    box-shadow: 0 0px 10px 1px rgba(0, 0, 0, 0.4); }
+    margin-bottom: 0; }
 
-/* line 11, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_header.scss */
-main {
-  position: relative;
-  z-index: 1;
-  max-height: 920px;
-  overflow-y: auto; }
+/* line 12, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_header.scss */
+#bloc-server {
+  width: calc(100% + 30px);
+  margin-left: -15px;
+  line-height: 45px;
+  padding: 5px;
+  background-color: #4D96D2; }
+  /* line 18, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_header.scss */
+  #bloc-server strong {
+    color: #FFFFFF; }
+
+/* line 23, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_header.scss */
+#start-server {
+  display: none; }
 
 /* line 1, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_boutons.scss */
 .btn {
   margin-left: 5px; }
+
+/* line 5, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_boutons.scss */
+li.undeploy {
+  cursor: pointer; }
+  /* line 8, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_boutons.scss */
+  li.undeploy:hover,
+  li.undeploy .selected {
+    background-color: #4D96D2;
+    color: #FFFFFF; }
 
 /* line 2, C:/Users/jjacques/Google Drive/PSLConsole/css/sass/_table.scss */
 th.commandCel,

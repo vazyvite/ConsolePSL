@@ -1,16 +1,25 @@
 header {
 	position: relative;
 	z-index: 2;
+	padding: 7px 35px 10px 35px;
+	box-shadow: 0 0px 10px 1px rgba(0,0,0,.4);
 	h1 {
-		padding: 7px 35px 10px 35px;
 		margin-top: 0;
 		margin-bottom: 0;
-		box-shadow: 0 0px 10px 1px rgba(0,0,0,.4);
 	}
 }
-main {
-	position: relative;
-	z-index: 1;
-	max-height: 920px;
-	overflow-y: auto;
+
+#bloc-server {
+	width: calc(100% + 30px);
+	margin-left: -15px;
+	line-height: 45px;
+	padding: 5px;
+	background-color: $color_bleu1;
+	strong {
+		color: $color_blanc;
+	}
+}
+
+#start-server {
+	display: none;
 }

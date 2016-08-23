@@ -3,6 +3,17 @@
 	font-family: Arial;
 }
 
+body {
+	overflow-x: hidden;
+}
+
+main {
+	position: relative;
+	z-index: 1;
+	max-height: 955px;
+	overflow-y: auto;
+}
+
 h1,
 h2,
 h3,

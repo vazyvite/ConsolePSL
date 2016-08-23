@@ -120,7 +120,7 @@
 			 */
 			creerTableLineDemarche: function (demarche, $table) {
 				var idDemarche = "lblDemarche_" + demarche.name,
-					$ligne = $("<tr>").data({demarche: demarche}),
+					$ligne = $("<tr>").attr("data-codeDemarche", demarche.name).data({demarche: demarche}),
 					$cel1 = $("<td>").attr("id", "lblDemarche_" + demarche.name),
 					$infosDemarche = $("<details>").appendTo($cel1),
 					$cel2 = $("<td>"),
@@ -173,7 +173,10 @@
 			drawDeployInfosDemarche: function (infosDemarche) {
 				var $ul = $("#deploy-info-demarches");
 				if (!$ul.find("." + infosDemarche.code).size()) {
-					$("<li>").addClass("list-group-item " + infosDemarche.code).text(infosDemarche.code).appendTo($ul);
+					$("<li>").addClass("list-group-item undeploy " + infosDemarche.code).attr({
+						"data-codeDemarche": infosDemarche.code,
+						"title": "désinstaller la démarche " + infosDemarche.code
+					}).text(infosDemarche.code).appendTo($ul);
 				}
 			}
 		},
@@ -268,6 +271,14 @@
 			}
 		},
 		utils = {
+			/**
+			 * Indique si l'option "Déployer le bouchon PREC" a été activé
+			 * @returns {boolean}
+			 */
+			isBouchonPREC: function () {
+				return ($("#deployerBouchonPREC").is(":checked")) ? true : false;
+			},
+			
 			/**
 			 * Indique si l'option "Générer le service Stubbed" a été activée
 			 * @returns {boolean}
@@ -644,7 +655,7 @@
 					version = (isFramework) ? infosDemarche.versionFramework : infosDemarche.versionServices,
 					fs = require("fs"),
 					data = null,
-					pattern = (isFramework) ? /<parent>\n(?:\t*<[a-zA-Z0-1]+>.*<\/[a-zA-Z0-1]+>\n)+\t*<version>([a-zA-Z0-9\.\-]+)<\/version>\n\t*<\/parent>/ig : /<version>([0-9a-zA-Z\.\-]+)<\/version>/ig,
+					pattern = (isFramework && utils.isBranche(version)) ? /<parent>\n(?:\t*<[a-zA-Z0-1]+>.*<\/[a-zA-Z0-1]+>\n)+\t*<version>([a-zA-Z0-9\.\-]+)<\/version>\n\t*<\/parent>/ig : /<version>([0-9a-zA-Z\.\-]+)<\/version>/ig,
 					versionDoc = null;
 				try {
 					if (utils.isSnapshot(version)) {
@@ -988,24 +999,42 @@
 			});
 		});
 	}
+	
+	function testServerActivity(callback) {
+		var http = require('http'),
+			options = {method: 'HEAD', host: 'localhost', port: 9990, path: '/console/App.html'},
+			req = http.request(options, function (r) {
+				$("#start-server").hide();
+				$("#stop-server").show();
+			});
+		req.on("end", function () {
+			$("#start-server").hide();
+			$("#stop-server").show();
+		});
+		req.on("error", function () {
+			$("#start-server").show();
+			$("#stop-server").hide();
+		});
+	}
 
 	$(function () {
 		// initialisation de la page
 		start();
-
+		testServerActivity();
+		
 		// mise en place des évènements
 		$("body").on("click", "#listeProjets .build", function () {
 			var $that = $(this),
 				data_demarche = $that.parents("tr:first").data("demarche"),
 				infosDemarche = new DemarcheInfos(),
-				nbEtapes = 7;
+				nbEtapes = 8;
 			if (data_demarche != null) {
 				loader.add($that.parents("tr:first"));
 				infosDemarche.code = data_demarche.dir;
 				infosDemarche.codeDemarche = data_demarche.code;
 				incrementEtape($that, true);
 				// récupération des informations du POM de la démarche
-				bat.getInfosPOM(infosDemarche, $that, function () {
+				/*bat.getInfosPOM(infosDemarche, $that, function () {
 					nbEtapes = utils.calculerEtapes(infosDemarche, nbEtapes, false);
 					if (bat.valideScenario($that, infosDemarche, false)) {
 						loader.update($that, "demarche", "getInfos", nbEtapes, false);
@@ -1023,7 +1052,21 @@
 							});
 						});
 					}
+				});*/
+				
+				bat.getInfosPOM(infosDemarche, $that, function () {
+					if (bat.valideScenario($that, infosDemarche, true)) {
+						loader.update($that, "demarche", "getInfos", nbEtapes, false);
+						// traitement du framework
+						framework(infosDemarche, $that, nbEtapes, function () {
+							// traitement de la démarche
+							demarche(infosDemarche, $that, nbEtapes, function () {
+								new Notification("Succès", {body: "Fin du déploiement de la démarche " + infosDemarche.code});
+							});
+						});
+					}
 				});
+				
 			} else {
 				alert("La démarche n'existe pas");
 			}
@@ -1031,7 +1074,7 @@
 			var $that = $(this),
 				data_demarche = $that.parents("tr:first").data("demarche"),
 				infosDemarche = new DemarcheInfos(),
-				nbEtapes = 7;
+				nbEtapes = 8;
 			if (data_demarche != null) {
 				loader.add($that.parents("tr:first"));
 				infosDemarche.code = data_demarche.dir;
@@ -1099,7 +1142,7 @@
 						framework(infosDemarche, $that, nbEtapes, function () {
 							// traitement de la démarche
 							demarcheBuildSimple(infosDemarche, $that, nbEtapes, function () {
-								new Notification("Succès", {body: "Fin du déploiement de la démarche " + infosDemarche.code});
+								new Notification("Succès", {body: "Fin du build de la démarche " + infosDemarche.code});
 							});
 						});
 					}
@@ -1162,6 +1205,31 @@
 			setTimeout(function () {
 				loader.resetAll();
 			}, 10);
+		}).on("click", ".undeploy", function () {
+			var codeDemarche = $(this).attr("data-codeDemarche"),
+				$that = $("tr[data-codeDemarche='" + codeDemarche + "'] button:first"),
+				data_demarche = $that.parents("tr:first").data("demarche"),
+				infosDemarche = new DemarcheInfos(),
+				nbEtapes = 2;
+			if (data_demarche != null) {
+				loader.add($that.parents("tr:first"));
+				infosDemarche.code = data_demarche.dir;
+				infosDemarche.codeDemarche = data_demarche.code;
+				incrementEtape($that, true);
+				// récupération des informations du POM de la démarche
+				bat.getInfosPOM(infosDemarche, $that, function () {
+					loader.update($that, "demarche", "undeploy", nbEtapes, false);
+					var path = infosDemarche.code;
+					bat.undeploy($that, path, function () {
+						new Notification("Succès", {body: "Fin du retrait de la démarche " + infosDemarche.code});
+						$("li[data-codeDemarche='" + infosDemarche.code + "']").remove();
+						$that.parents("tr:first").removeClass("success");
+						loader.remove($that.parents("tr:first"));
+					});
+				});
+			} else {
+				alert("La démarche n'existe pas");
+			}
 		});
 
 		// on fait suivre les loaders lors du resize de la page
@@ -1212,10 +1280,52 @@
 		});
 
 		$("#settings").on("click", function () {
+			if (!app.settings) {
+				app.settings = {
+					workspace: "",
+					wildfly: {
+						standalone: ""
+					},
+					pg: {
+						url: "",
+						username: "",
+						password: ""
+					},
+					dir: {
+						versionServices: "",
+						brancheServices: "",
+						trunkServices: "",
+						trunkframework: "",
+						stub: ""
+					}
+				};
+			}
 			$("#settingsWorkspace").val(app.settings.workspace);
+			if (!app.settings.wildfly) {
+				app.settings.wildfly = {
+					standalone: ""
+				};
+			}
+			$("#settingsStandalone").val(app.settings.wildfly.standalone);
+			if (!app.settings.pg) {
+				app.settings.pg = {
+					url: "",
+					username: "",
+					password: ""
+				};
+			}
 			$("#urlPGSQL").val(app.settings.pg.url);
 			$("#userPGSQL").val(app.settings.pg.username);
 			$("#passwordPGSQL").val(app.settings.pg.password);
+			if (!app.settings.dir) {
+				app.settings.dir = {
+					versionServices: "",
+					brancheServices: "",
+					trunkServices: "",
+					trunkframework: "",
+					stub: ""
+				};
+			}
 			$("#dirVersionServices").val(app.settings.dir.versionServices);
 			$("#dirServiceBranche").val(app.settings.dir.brancheServices);
 			$("#dirServiceTrunk").val(app.settings.dir.trunkServices);
@@ -1240,6 +1350,7 @@
 			});
 			if (isValidForm) {
 				app.settings.workspace = $("#settingsWorkspace").val();
+				app.settings.wildfly.standalone = $("#settingsStandalone").val();
 				app.settings.dir.versionServices = $("#dirVersionServices").val();
 				app.settings.dir.brancheServices = $("#dirServiceBranche").val();
 				app.settings.dir.trunkServices = $("#dirServiceTrunk").val();
@@ -1261,6 +1372,78 @@
 			} else {
 				form.removeErreur($this);
 			}
+		});
+		
+		$("#start-server").on("click", function () {
+			// on va chercher le fichier bat de lancement du serveur
+			// on exécute
+			
+			var server = require("child_process").spawn("cmd.exe", ["/c", app.settings.wildfly.standalone + 'standalone.bat --debug --server-config=standalone-full.xml'], {
+				cwd: app.settings.wildfly.standalone
+			});
+			
+			$(this).find(".glyphicon").removeClass("glyphicon-play").addClass("glyphicon-refresh").attr("disabled", "disabled");
+			
+			server.stdout.on("data", function (data) {
+				data = data.toString("utf8");
+				// mise en style des logs
+				data = data.replace(/^((?:\[ERROR\]|Caused by|\tat|\t\.{3}).*)$/gim, function (find) {
+					return "<span class='log-error'>" + find + "</span>";
+				});
+				data = data.replace(/^(\[INFO\].*)$/gim, function (find) {
+					return "<span class='log-info'>" + find + "</span>";
+				});
+				data = data.replace(/^(\[WARNING\].*)$/gim, function (find) {
+					return "<span class='log-warning'>" + find + "</span>";
+				});
+				$("<p>").html(data).appendTo("#modalLogsServer .modal-body");
+				$("#modalLogsServer .modal-body")[0].scrollTop = $("#modalLogsServer .modal-body")[0].scrollHeight;
+				if (data.match("started in [0-9]*ms")) {
+					$("#start-server").hide();
+					$("#stop-server").find(".glyphicon").addClass("glyphicon-stop").removeClass("glyphicon-refresh").attr("disabled", false).show();
+				}
+			});
+			
+			server.stderr.on("data", function (data) {
+				$("<p>").html(data.toString("utf8")).appendTo("#modalLogsServer .modal-body");
+				$("#modalLogsServer .modal-body")[0].scrollTop = $("#modalLogsServer .modal-body")[0].scrollHeight;
+				$("#start-server").hide();
+				$("#stop-server").find(".glyphicon").addClass("glyphicon-stop").removeClass("glyphicon-refresh").attr("disabled", false).show();
+			});
+			
+			server.on("exit", function (code) {
+				console.log(code);
+				$("#start-server").hide();
+				$("#stop-server").find(".glyphicon").addClass("glyphicon-stop").removeClass("glyphicon-refresh").attr("disabled", false).show();
+			});
+		});
+		
+		$("#stop-server").on("click", function () {
+			var server = require("child_process").spawn("cmd.exe", ["/c", app.settings.wildfly.standalone + "jboss-cli.bat -c --command=:shutdown"]);
+			
+			$(this).find(".glyphicon").removeClass("glyphicon-stop").addClass("glyphicon-refresh").attr("disabled", "disabled");
+			
+			server.stdout.on("data", function (data) {
+				$("<p>").html(data.toString("utf8")).appendTo("#modalLogsServer .modal-body");
+				$("#modalLogsServer .modal-body")[0].scrollTop = $("#modalLogsServer .modal-body")[0].scrollHeight;
+			});
+
+			server.stderr.on("data", function (data) {
+				$("<p>").html(data.toString("utf8")).appendTo("#modalLogsServer .modal-body");
+				$("#modalLogsServer .modal-body")[0].scrollTop = $("#modalLogsServer .modal-body")[0].scrollHeight;
+			});
+
+			server.on("exit", function (code) {
+				console.log(code);
+				$("#stop-server").hide();
+				$("#start-server").show();
+				$("#start-server").find(".glyphicon").addClass("glyphicon-play").removeClass("glyphicon-refresh").attr("disabled", false);
+			});
+		});
+		
+		$("#logs-serveur").on("click", function () {
+			$("#modalLogsServer").data("cible", $("#logs-serveur")).modal("show");
+			$("#modalLogsServer").modal("show");
 		});
 
 		$(".infobulle").popover();

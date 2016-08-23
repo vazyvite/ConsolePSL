@@ -1,11 +1,16 @@
-Evolutions(012)
+Evolutions(017)
 ---------------------------------------
 EVO003 - Ajouter un chargement des éléments déployés sur le serveur à l'initialisation de l'application
+EVO012 - Ajouter un bouton d'activation des bouchons
+EVO013 - Ajouter la dernière heure de déploiement dans les données sauvegardées des démarches et initialiser l'application avec cette donnée au chargement
+EVO015 - Activer le déploiement des bouchons PREC en même temps que les services
+EVO016 - Donner la possibilité de démarrer le serveur à partir de la console
 
 
-Anomalies(010)
+Anomalies(012)
 ---------------------------------------
-
+ANO010 - Le libellé des démarches déployées n'est pas correct.
+ANO011 - Certaines erreurs de déploiement ne sont pas remontées comme telle
 
 
 Annulés
@@ -47,3 +52,6 @@ EVO004 - Ajouter un message d'erreur si le Framework SNAPSHOT n'est pas de la ve
 EVO005 - Ajouter un message d'erreur si les services SNAPSHOT ne sont pas de la version attendue
 EVO006 - Ajouter un message d'erreur si les services RELEASE ne sont pas présents dans le répertoire
 Amélioration de la gestion des notifications.
+
+0.2.11
+EVO014 - Afficher les blocs de manière plus sobre
